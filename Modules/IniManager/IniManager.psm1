@@ -43,8 +43,7 @@ function Get-Ini {
         [hashtable]$iniConfigArray = [ordered]@{}
 
         foreach ($line in $iniFile) {
-            # below need to be changed to check for existance of [ and ] instead of end and start
-            if ( $line.StartsWith('[') -and $line.EndsWith(']') ) {
+            if ( $line.Trim().StartsWith('[') -and $line.EndsWith(']') ) {
                 Write-Verbose "Found new section."
                 if ($currentSection -ne ''){
                     Write-Verbose "Creating section property based on array:"
