@@ -7,6 +7,10 @@
     Sets a specific key to a value in a ini file
     Comments will be ignored.
     Warning: Even comments in the target ini file will be removed!
+
+   Created by John Roos 
+   Email: john@roostech.se
+   Web: http://blog.roostech.se
 .EXAMPLE
    Set-IniKey -Path "C:\config.ini" -Key LoggingLevel -Value Debug -Section Logging -Encoding UTF8
 

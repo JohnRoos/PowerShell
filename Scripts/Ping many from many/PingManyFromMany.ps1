@@ -1,4 +1,8 @@
-﻿$sources = 'server1', 'server2', 'server3'
+﻿# Created by John Roos 
+# Email: john@roostech.se
+# Web: http://blog.roostech.se
+
+$sources = 'server1', 'server2', 'server3'
 $targets = 'server4', 'server5'
 $logpath = 'C:\Ping_logs\'
  

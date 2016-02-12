@@ -5,6 +5,10 @@
    Checks for one or more patches on one or more servers. The results show if each patch is installed or not on each server.
    The script uses the cmdlet Get-Hotfix so make sure you can run that towards the servers. 
    Get-Hotfix does not return anything if no patch is found. This script works around that to show where the patches are not installed as well as where they are installed.
+   
+   Created by John Roos 
+   Email: john@roostech.se
+   Web: http://blog.roostech.se
 .EXAMPLE
    .\Find-Hotfix.ps1 -Hotfix_FilePath 'c:\hotfixes.txt' -ComputerName_FilePath 'c:\servers.txt'
 .EXAMPLE
@@ -13,9 +17,6 @@
    .\Find-Hotfix.ps1 -Hotfix 'KB2991963', 'KB2923423' -ComputerName_FilePath 'c:\servers.txt'
 .EXAMPLE
    .\Find-Hotfix.ps1 -Hotfix_FilePath 'c:\hotfixes.txt' -ComputerName 'server01', 'server02'
-.NOTES
-   Written by John Roos
-   http://blog.roostech.se
 #>
 Param
 (

@@ -1,4 +1,7 @@
-﻿$source = @"
+﻿# Credit goes to BeowulfNode42 on Stackoverflow. Thank you.
+# http://stackoverflow.com/questions/5898843/c-sharp-get-system-file-cache-size
+
+$source = @"
 using System;
 using System.Runtime.InteropServices;
 

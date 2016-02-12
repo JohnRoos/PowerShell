@@ -3,13 +3,14 @@
    This scripts will get some basic information from IMDB about a movie by parcing the html code on the website.
 .DESCRIPTION
    This scripts will get some basic information from IMDB about a movie by parcing the html code on the website.
+
+   Created by John Roos 
+   Email: john@roostech.se
+   Web: http://blog.roostech.se
 .EXAMPLE
    Get-ImdbMovie -Title 'star trek'
 .EXAMPLE
    Get-ImdbMovie -Title 'star trek' -verbose
-.NOTES
-   Created by John Roos
-   http://blog.roostech.se
 #>
 function Get-IMDBMovie
 {
