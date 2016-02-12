@@ -1,5 +1,104 @@
 ﻿#REQUIRES -Version 4.0
 
+
+<#
+.Synopsis
+    Reads an ini file and creates an object based on the content of the file
+.DESCRIPTION
+    Reads an ini file and creates an object based on the content of the file. One property per key/value. Sections will be named with surrounding brackets and will contain a list of objects based on the keys within that section.
+    Comments will be ignored.
+
+   Created by John Roos 
+   Email: john@roostech.se
+   Web: http://blog.roostech.se
+.EXAMPLE
+   get-ini -Path "C:\config.ini"
+
+   Opens the file config.ini and creates an object based on that file.
+.OUTPUTS
+   Outputs an custom object of the type File.Ini
+#>
+function Get-Ini {
+    [CmdletBinding()]
+    param(
+        # Enter the path for the ini file
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$true,
+                   Position=0)]
+        [string]$Path
+    )
+
+    Process{
+        if (!(Test-Path $Path)) {
+            Write-Error 'Invalid path'
+            break
+        }
+
+        $iniFile = Get-Content $Path -Verbose:$false
+        $currentSection = ''
+        $currentKey = ''
+        $currentValue = ''
+    
+        [hashtable]$iniSectionHash = [ordered]@{}
+        [hashtable]$iniConfigArray = [ordered]@{}
+
+        foreach ($line in $iniFile) {
+            # below need to be changed to check for existance of [ and ] instead of end and start
+            if ( $line.StartsWith('[') -and $line.EndsWith(']') ) {
+                Write-Verbose "Found new section."
+                if ($currentSection -ne ''){
+                    Write-Verbose "Creating section property based on array:"
+                    $keyobj = New-Object PSObject -Property $iniConfigArray
+                    $keyobj.PSObject.TypeNames.Insert(0,'File.Ini.Config')
+                    $iniSectionHash.Add($currentSection,$keyobj)
+                    [hashtable]$iniConfigArray = @{}
+                    Write-Verbose "Created section property: $currentSection"
+                }
+                if ($iniConfigArray.count -gt 0) {
+                    $rootSection = $iniConfigArray
+                    [hashtable]$iniConfigArray = [ordered]@{}
+                }
+                $currentSection = $line
+                Write-Verbose "Current section: $currentSection"
+                continue
+            }
+            Write-Verbose "Parsing line: $line"
+            if ( $line.Contains('=') ){
+                $keyvalue = $line.Split('=')
+                [string]$currentKey   = $keyvalue[0]
+                [string]$currentValue = $keyvalue[1]
+                $valuehash = @{
+                    $currentKey = $currentValue
+                }
+                $iniConfigArray.Add($currentKey, $currentValue)
+                Write-Verbose "Added keyvalue: $($keyvalue[0]) = $($keyvalue[1])"
+            } 
+            <# below was for handling comments, but I wont do it...
+              elseif ($line.Contains('#') -or $line.Contains(';')) {
+                [string]$currentKey   = $line
+                [string]$currentValue = ""
+                $valuehash = @{
+                    $currentKey = $currentValue
+                }
+                $iniConfigArray.Add($currentKey, $currentValue)
+                Write-Verbose "Added comment: $currentKey"
+            }#>
+        }
+        $keyobj = New-Object PSObject -Property $iniConfigArray
+        $keyobj.PSObject.TypeNames.Insert(0,'File.ini.Section')
+        $iniSectionHash.Add($currentSection,$keyobj)
+        Write-Verbose "Created last section property: $currentSection"
+        $result = New-Object PSObject -Property $iniSectionHash
+        if ($rootSection) {
+            foreach ($key in $rootSection.keys){
+                Add-Member -InputObject $result -MemberType NoteProperty -Name $key -Value $rootSection.$key
+            }
+        }
+        $result.PSObject.TypeNames.Insert(0,'File.ini')
+        Return $result
+    }
+}
+
 <#
 .Synopsis
     Sets a specific key to a value in a ini file   
@@ -112,6 +211,10 @@ function Set-IniKey {
     Removes a key (entire line) in ini file
     Comments will be ignored.
     Warning: Even comments in the target ini file will be removed!
+
+   Created by John Roos 
+   Email: john@roostech.se
+   Web: http://blog.roostech.se
 .EXAMPLE
    Remove-IniKey -Path "c:\config.ini" -Key [system]Proxy -Encoding ASCII
 
@@ -234,6 +337,10 @@ function Remove-IniKey {
     Renames a key in ini file
     Comments will be ignored.
     Warning: Even comments in the target ini file will be removed!
+
+   Created by John Roos 
+   Email: john@roostech.se
+   Web: http://blog.roostech.se
 .EXAMPLE
    Rename-IniKey -Path c:\config.ini -Key Prixy -NewKey Proxy -Section system -Encoding UTF8
 
@@ -369,6 +476,10 @@ function Rename-IniKey {
     The keys will be added if they do not exist.
     Comments will be ignored.
     Warning: Even comments in the target ini file will be removed!
+
+   Created by John Roos 
+   Email: john@roostech.se
+   Web: http://blog.roostech.se
 .EXAMPLE
    Set-IniFromHash -Path c:\config.ini -Values @{'DebugLog'='false';'[settings]Hostname'='localhost'} -Encoding UTF8
 
@@ -466,99 +577,6 @@ function Set-IniFromHash {
 
 
 
-<#
-.Synopsis
-    Reads an ini file and creates an object based on the content of the file
-.DESCRIPTION
-    Reads an ini file and creates an object based on the content of the file. One property per key/value. Sections will be named with surrounding brackets and will contain a list of objects based on the keys within that section.
-    Comments will be ignored.
-.EXAMPLE
-   get-ini -Path "C:\config.ini"
-
-   Opens the file config.ini and creates an object based on that file.
-.OUTPUTS
-   Outputs an custom object of the type File.Ini
-#>
-function Get-Ini {
-    [CmdletBinding()]
-    param(
-        # Enter the path for the ini file
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true,
-                   Position=0)]
-        [string]$Path
-    )
-
-    Process{
-        if (!(Test-Path $Path)) {
-            Write-Error 'Invalid path'
-            break
-        }
-
-        $iniFile = Get-Content $Path -Verbose:$false
-        $currentSection = ''
-        $currentKey = ''
-        $currentValue = ''
-    
-        [hashtable]$iniSectionHash = [ordered]@{}
-        [hashtable]$iniConfigArray = [ordered]@{}
-
-        foreach ($line in $iniFile) {
-            # below need to be changed to check for existance of [ and ] instead of end and start
-            if ( $line.StartsWith('[') -and $line.EndsWith(']') ) {
-                Write-Verbose "Found new section."
-                if ($currentSection -ne ''){
-                    Write-Verbose "Creating section property based on array:"
-                    $keyobj = New-Object PSObject -Property $iniConfigArray
-                    $keyobj.PSObject.TypeNames.Insert(0,'File.Ini.Config')
-                    $iniSectionHash.Add($currentSection,$keyobj)
-                    [hashtable]$iniConfigArray = @{}
-                    Write-Verbose "Created section property: $currentSection"
-                }
-                if ($iniConfigArray.count -gt 0) {
-                    $rootSection = $iniConfigArray
-                    [hashtable]$iniConfigArray = [ordered]@{}
-                }
-                $currentSection = $line
-                Write-Verbose "Current section: $currentSection"
-                continue
-            }
-            Write-Verbose "Parsing line: $line"
-            if ( $line.Contains('=') ){
-                $keyvalue = $line.Split('=')
-                [string]$currentKey   = $keyvalue[0]
-                [string]$currentValue = $keyvalue[1]
-                $valuehash = @{
-                    $currentKey = $currentValue
-                }
-                $iniConfigArray.Add($currentKey, $currentValue)
-                Write-Verbose "Added keyvalue: $($keyvalue[0]) = $($keyvalue[1])"
-            } 
-            <# below was for handling comments, but I wont do it...
-              elseif ($line.Contains('#') -or $line.Contains(';')) {
-                [string]$currentKey   = $line
-                [string]$currentValue = ""
-                $valuehash = @{
-                    $currentKey = $currentValue
-                }
-                $iniConfigArray.Add($currentKey, $currentValue)
-                Write-Verbose "Added comment: $currentKey"
-            }#>
-        }
-        $keyobj = New-Object PSObject -Property $iniConfigArray
-        $keyobj.PSObject.TypeNames.Insert(0,'File.ini.Section')
-        $iniSectionHash.Add($currentSection,$keyobj)
-        Write-Verbose "Created last section property: $currentSection"
-        $result = New-Object PSObject -Property $iniSectionHash
-        if ($rootSection) {
-            foreach ($key in $rootSection.keys){
-                Add-Member -InputObject $result -MemberType NoteProperty -Name $key -Value $rootSection.$key
-            }
-        }
-        $result.PSObject.TypeNames.Insert(0,'File.ini')
-        Return $result
-    }
-}
 
 
 <#
@@ -567,6 +585,10 @@ function Get-Ini {
 .DESCRIPTION
     Creates an ini file based on a custom object of the type File.Ini
     Comments will be ignored.
+
+   Created by John Roos 
+   Email: john@roostech.se
+   Web: http://blog.roostech.se
 .EXAMPLE
    get-ini -Path "C:\config.ini" | new-ini -Path c:\config_new.ini -Encoding UTF8
 
@@ -624,6 +646,23 @@ function New-Ini {
 } 
 
 
+<#
+.Synopsis
+    Returns true or false if the ini file has the provided configuration
+.DESCRIPTION
+    Reads the configuration from an ini file and compares the content with the provided hashtable.
+    Comments will be ignored.
+
+   Created by John Roos 
+   Email: john@roostech.se
+   Web: http://blog.roostech.se
+.EXAMPLE
+   Test-Ini -Path "C:\config.ini" -Values @{'DebugLog'='false';'[settings]Hostname'='localhost'} 
+
+   Opens the file config.ini and checks the values for 'DebugLog' (not in any section) and 'Hostname' (in section 'settubgs'). If the values are the same as the provided values the function will return True, otherwise it will return False.
+.OUTPUTS
+   Boolean
+#>
 function Test-Ini {
     [CmdletBinding()]
     param(
