@@ -691,7 +691,7 @@ function Write-ObjectToSQL
             # if its not supported, add it to the $removeFromSample variable so that we can skip to check that one on the next object (for performance)
             try {
                 if ( $numbertypes.ContainsKey( $datatype ) ){
-                    $null = $strBuilderColumns.Append(", $prekey$($key.Replace(' ','_'))")
+                    $null = $strBuilderColumns.Append(", $quoteFirst$prekey$($key.Replace(' ','_'))$quoteLast")
 
                     if ($($InputObject.$key)){
                         if ($datatype -eq 'timespan' -or $datatype -eq 'System.TimeSpan') {
