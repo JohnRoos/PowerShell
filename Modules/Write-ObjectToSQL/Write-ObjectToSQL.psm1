@@ -215,14 +215,15 @@ function Write-ObjectToSQL
                    HelpMessage="Please specify a database name.",
                    ValueFromPipeline=$False)]
         [ValidateNotNullorEmpty()]
-        [string]$Database = 'SlabLab',
+        [string]$Database,
 
         # Credential to use when opening the connection to the server.
         [Parameter(Mandatory=$False,
                    ParameterSetName='mssql',
                    HelpMessage="Please specify a credential.",
                    ValueFromPipeline=$False)]
-        [System.Management.Automation.PSCredential]
+        [PSCredential]
+        [System.Management.Automation.CredentialAttribute()]
         $Credential,
 
         # Connection string when not using SQL Server
@@ -631,7 +632,7 @@ function Write-ObjectToSQL
             if ($createtable){
                 $command = $modconnection.CreateCommand()
                 $command.CommandText = $createquery
-                $result = $command.ExecuteNonQuery()
+                $command.ExecuteNonQuery() | Out-Null
                 Write-Verbose "Table created with $acceptedcolumns columns ($ignoredcolumns ignored)"
             }else{
                 Write-Verbose "Skipping table creation based on parameter selection"
@@ -757,7 +758,7 @@ function Write-ObjectToSQL
             try {
                 $command = $modconnection.CreateCommand()
                 $command.CommandText = $insertstring
-                $insertResult = $command.ExecuteNonQuery()
+                $command.ExecuteNonQuery() | Out-Null
                 Write-Verbose "Row inserted"
                 $rowsinserted++
             } catch {
@@ -786,8 +787,8 @@ function Write-ObjectToSQL
             $reportendtime = Get-Date
             $reporttimespent = [math]::round((NEW-TIMESPAN –Start $reportstarttime –End $reportendtime).TotalSeconds,2)
                 
-            Write-Host "$((get-date -Format s).Replace('T',' ')) - Rows inserted: $rowsinserted ($([math]::round( ($rowsinserted-$reportrowsinsertedstart)/$reporttimespent ,2)) rows per second)"
-
+            Write-Output "$((get-date -Format s).Replace('T',' ')) - Rows inserted: $rowsinserted ($([math]::round( ($rowsinserted-$reportrowsinsertedstart)/$reporttimespent ,2)) rows per second)"
+            
             $reportrowsinsertedstart = $rowsinserted
 
             # reset $reportcompare and $reportstarttime so that we can use them again for the next time we want to report progress.
@@ -803,7 +804,6 @@ function Write-ObjectToSQL
         $modconnection.close()
 
         # prepare the output
-        $timetypestring = 'seconds'
         $endtime = Get-Date
         $timespentseconds = [math]::round((NEW-TIMESPAN –Start $starttime –End $endtime).TotalSeconds,2)
         
@@ -838,10 +838,10 @@ function Write-ObjectToSQL
             
             # write how many rows we inserted to the console
             if ($rowsinserted -ne 1) {
-                Write-Host "Inserted $rowsinserted rows into $tablename in $timespent $($TimeSpanType.ToLower()) ($rowspersecond rows per second)"
+                Write-Output "Inserted $rowsinserted rows into $tablename in $timespent $($TimeSpanType.ToLower()) ($rowspersecond rows per second)"
                 
             }else{
-                Write-Host "Inserted $rowsinserted row into $tablename in $timespent $($TimeSpanType.ToLower()) ($rowspersecond rows per second)"
+                Write-Output "Inserted $rowsinserted row into $tablename in $timespent $($TimeSpanType.ToLower()) ($rowspersecond rows per second)"
             }
             
             # write how many rows that failed to the console
