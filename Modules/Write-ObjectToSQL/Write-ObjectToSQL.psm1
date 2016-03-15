@@ -68,6 +68,7 @@
    Created by John Roos 
    Email: john@roostech.se
    Web: http://blog.roostech.se
+   Repo: https://github.com/JohnRoos/PowerShell
    
 .EXAMPLE
    PS C:\> Get-Process | Write-ObjectToSQL -Server localhost\sqlexpress -Database MyDB -TableName ProcessTable
@@ -173,6 +174,11 @@
                     Improved error handling to avoid getting WriteErrorException
                     Added support for System.Guid
                     Fixed bug where paranteses in property names would cause errors (thanks to Ruud Borst for finding this!)
+                    Changed declaration of PSCredential to follow best practice with CredentialAttribute.
+                    Removed a couple of variables which was never used.
+                    Changed Write-Host to Write-Output to follow best practice.
+                    Removed initialization of Database parameter in param block.
+                    Now the PSScriptAnalyzer can shut up.
 
 .LINK
     SQL Server data types                http://msdn.microsoft.com/en-us/library/ms187752.aspx
