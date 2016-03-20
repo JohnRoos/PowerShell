@@ -1,18 +1,9 @@
-﻿enum Ensure
-{
-    Absent
-    Present
-}
-
-[DscResource()]
+﻿[DscResource()]
 class cIniFile
 {
 
     [DscProperty(Key)]
     [string] $Path
-
-    [DscProperty(Mandatory)]
-    [Ensure] $Ensure
 
     [DscProperty(Mandatory)]
     [hashtable] $Config
@@ -33,9 +24,6 @@ class cIniFile
     
     [cIniFile] Get()
     {        
-        # NotConfigurable properties are set in the Get method.
-        $this.Config = Get-Ini -Path $this.Path
-        # Return this instance or construct a new instance.
         return $this 
     }
 }
@@ -44,7 +32,6 @@ class cIniFile
 
 
 ###################################
-
 
 #REQUIRES -Version 4.0
 
@@ -563,13 +550,30 @@ function Set-IniFromHash {
 
         Write-Verbose "Checking if path exists"
         if (Test-Path $Path) {
-            Write-Verbose "Path exists"
+            Write-Verbose "File exists"
+            $iniexist = $true
             Write-Verbose "Reading ini file with Get-Ini"
             $ini = Get-Ini -Path $Path -Verbose:$false
             Write-Verbose "Get-Ini completed"
         } else {
-            Write-Error 'Path does not exist'
-            break
+            if ($Force){
+                $ini = New-Object -TypeName psobject
+                Write-Verbose 'File does not exist (new file will be created)'
+                $iniexist = $false
+            } else {
+                Write-Error 'File does not exist. Use the Force parameter to create file.'
+                break
+            }
+        }
+
+        [array]$availableSections = @()
+                
+        if ($iniexist) {
+            $availableSections = ( $ini | 
+                Get-Member -MemberType Properties | 
+                    Where-Object {$_.MemberType -eq 'Property' -or $_.MemberType -eq 'NoteProperty'} | 
+                        Select-Object -ExpandProperty Name | 
+                            Where-Object {$_.Contains(']')} ).tolower()
         }
 
         foreach ($key in $Values.keys) {
@@ -579,11 +583,17 @@ function Set-IniFromHash {
                 $keysplit = $key.Split(']')
                 $section = $keysplit[0] + ']'
                 $property = $keysplit[1]
-                [array]$availableSections = ($ini | Get-Member -MemberType Properties | Where-Object {$_.MemberType -eq 'Property' -or $_.MemberType -eq 'NoteProperty'} | Select-Object -ExpandProperty Name | Where-Object {$_.Contains(']')}).tolower()
+
+                
                 if ($availableSections.Contains($section.ToLower())) {
                     Write-Verbose "Section $section exists"
 
-                    [array]$availableProps = ($ini.$section | Get-Member -MemberType Properties | Where-Object {$_.MemberType -eq 'Property' -or $_.MemberType -eq 'NoteProperty'} | Select-Object -ExpandProperty Name | Where-Object {!$_.Contains(']')}).ToLower()
+                    [array]$availableProps = ( $ini.$section | 
+                        Get-Member -MemberType Properties | 
+                            Where-Object {$_.MemberType -eq 'Property' -or $_.MemberType -eq 'NoteProperty'} | 
+                                Select-Object -ExpandProperty Name | 
+                                    Where-Object {!$_.Contains(']')} ).ToLower()
+
                     if (!$availableProps.Contains($property.ToLower())) {
                         Write-Verbose "Property $property does not exist"
                         Write-Verbose "Creating new property $property"
@@ -594,16 +604,26 @@ function Set-IniFromHash {
                         $ini.$section.$Property = $Value
                     }
                 } else {
-                    Write-Verbose "Section $section does not exist"
+                    Write-Verbose "Section $section does not exist !one!"
                     $props = [hashtable]@{$property = $Values.$key}
                     $newValue = New-Object PSObject -Property $props
+                    $availableSections += $section.ToLower()
                     Add-Member -InputObject $ini -MemberType NoteProperty -Name $Section -Value $newValue
                 }
                 $ini.$section.$property = $Values.$key
             } else {
                 Write-Verbose "No section selected"
                 $property = $key
-                [array]$availableProps = ($ini | Get-Member -MemberType Properties | Where-Object {$_.MemberType -eq 'Property' -or $_.MemberType -eq 'NoteProperty'} | Select-Object -ExpandProperty Name | Where-Object {!$_.Contains(']')}).ToLower()
+                [array]$availableProps = @()
+
+                if ($iniexist) {
+                    [array]$availableProps = ($ini | 
+                        Get-Member -MemberType Properties | 
+                            Where-Object {$_.MemberType -eq 'Property' -or $_.MemberType -eq 'NoteProperty'} | 
+                                Select-Object -ExpandProperty Name | 
+                                    Where-Object {!$_.Contains(']')}).ToLower()
+                }
+
                 if (!$availableProps.Contains($property.ToLower())) {
                     Write-Verbose "Property $property does not exist"
                     Write-Verbose "Creating new property $property"
@@ -617,7 +637,7 @@ function Set-IniFromHash {
         }
         # uncomment below for debug
         # $ini 
-        Write-Verbose 'Saving file'
+        Write-Verbose "Saving file $Path with encoding $Encoding"
         New-Ini -Path $Path -Content $ini -Encoding $Encoding -Force:$Force -Verbose:$false
     }
 }
@@ -749,15 +769,15 @@ function Test-Ini {
                     [array]$availableProps = ($ini.$section | Get-Member -MemberType Properties | Where-Object {$_.MemberType -eq 'Property' -or $_.MemberType -eq 'NoteProperty'} | Select-Object -ExpandProperty Name | Where-Object {!$_.Contains(']')}).ToLower()
                     if (!$availableProps.Contains($property.ToLower())) {
                         Write-Verbose "Property $property does not exist"
-                        Write-Verbose "1. Property $property NOT OK"
+                        Write-Verbose "Property $property NOT OK (ref 1)"
                         return $false
                     } else {
                         Write-Verbose "Property $property exist"
                         if ($ini.$section.$Property -ne $Values.$key){
-                            Write-Verbose "2. Property $property NOT OK"
+                            Write-Verbose "Property $property NOT OK (ref 2)"
                             return $false
                         } else {
-                            Write-Verbose "1. Property $property OK"   
+                            Write-Verbose "Property $property OK (ref 1)"   
                         }
 
                     }
@@ -772,15 +792,15 @@ function Test-Ini {
                 [array]$availableProps = ($ini | Get-Member -MemberType Properties | Where-Object {$_.MemberType -eq 'Property' -or $_.MemberType -eq 'NoteProperty'} | Select-Object -ExpandProperty Name | Where-Object {!$_.Contains(']')}).ToLower()
                 if (!$availableProps.Contains($property.ToLower())) {
                     Write-Verbose "Property $property does not exist"
-                    Write-Verbose "3. Property $property NOT OK"
+                    Write-Verbose "Property $property NOT OK (ref 3)"
                     return $false
                 } else {
                     Write-Verbose "Property $property exist"
                     if ($ini.$Property -ne $Values.$key) {
-                        Write-Verbose "4. Property $property NOT OK"
+                        Write-Verbose "Property $property NOT OK (ref 4)"
                         return $false
                     } else {
-                        Write-Verbose "2. Property $property OK"
+                        Write-Verbose "Property $property OK (ref 2)"
                     }
                     
                 } 
