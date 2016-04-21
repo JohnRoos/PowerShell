@@ -17,6 +17,10 @@
    .\Find-Hotfix.ps1 -Hotfix 'KB2991963', 'KB2923423' -ComputerName_FilePath 'c:\servers.txt'
 .EXAMPLE
    .\Find-Hotfix.ps1 -Hotfix_FilePath 'c:\hotfixes.txt' -ComputerName 'server01', 'server02'
+.EXAMPLE
+   .\Find-Hotfix.ps1 -Hotfix_FilePath 'c:\hotfixes.txt' -ComputerName_FilePath 'c:\servers.txt' | ConvertTo-Csv -NoTypeInformation | Out-File -PSPath test.csv
+
+    This will export the result to a csv file.
 #>
 Param
 (
@@ -34,14 +38,14 @@ Param
     $ComputerName
 )
 
-if ($HotfixList_Path) {
+if ($Hotfix_FilePath) {
     $find_hotfix = Get-Content -Path $Hotfix_FilePath
 }else{
     $find_hotfix = $Hotfix
     
 }
 
-if ($ComputerList_Path){
+if ($ComputerName_FilePath){
     $servers = Get-Content -Path $ComputerName_FilePath
 }else{
     $servers = $ComputerName
@@ -51,20 +55,25 @@ if ($ComputerList_Path){
 $installedhf = Get-HotFix -Id $find_hotfix -ComputerName $servers
 
 foreach ($server in $servers){
-    $temphf = $installedhf | where PSComputerName -eq $server
-    
+    if ($installedhf){
+        $temphf = $installedhf | Where-Object {$_.PSComputerName -eq $server}
+    } 
     foreach ($hf in $find_hotfix){
         $verified_hotfix  = New-Object psobject
         Add-Member -InputObject $verified_hotfix -MemberType 'NoteProperty' -Name "ComputerName" -Value $server
         Add-Member -InputObject $verified_hotfix -MemberType 'NoteProperty' -Name "Hotfix" -Value $hf
         
-        if ($temphf.HotFixID.Contains($hf)){
-            Add-Member -InputObject $verified_hotfix -MemberType 'NoteProperty' -Name "Status" -Value 'Installed'
-        }else{
+        if ($temphf){
+            if ($temphf.HotFixID -contains $hf) {
+                Add-Member -InputObject $verified_hotfix -MemberType 'NoteProperty' -Name "Status" -Value 'Installed'
+            }else{
+                Add-Member -InputObject $verified_hotfix -MemberType 'NoteProperty' -Name "Status" -Value 'Not installed'
+            }
+        } else {
             Add-Member -InputObject $verified_hotfix -MemberType 'NoteProperty' -Name "Status" -Value 'Not installed'
         }
 
-        # send object to pipeline
         $verified_hotfix
+        Remove-Variable -Name verified_hotfix
     }
 }
