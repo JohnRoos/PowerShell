@@ -8,6 +8,8 @@ This module contains 7 cmdlets for managing ini files.
 * Set-IniKey
 * Test-Ini
 
+A more detailed description can be found in this blog post: http://blog.roostech.se/2016/04/introducing-inimanager-module.html
+
 ## Get-Ini
 #### Description
 Reads an ini file and creates an object based on the content of the file. One property per key/value. Sections will be named with surrounding brackets and will contain a list of objects based on the keys within that section.
