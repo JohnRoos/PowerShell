@@ -75,7 +75,7 @@ class WeatherForeCast {
     }
 
     # This might be used later. Under construction.
-    [ForeCast] GetForeCast ([datetime]$x) {
+    hidden [ForeCast] GetForeCast ([datetime]$x) {
         return $this.ForeCast
     }
 
@@ -132,7 +132,8 @@ break
 $forecastseries = [WeatherForeCast]::new()
 $forecastseries.DownloadForeCast()
 $forecastseries
-$forecastseries.ForeCast
+$forecastseries.ForeCast | select -First 10
+
 
 # Inspect the object
 $forecastseries | gm
