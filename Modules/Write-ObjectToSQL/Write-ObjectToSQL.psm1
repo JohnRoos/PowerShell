@@ -252,6 +252,13 @@ function Write-ObjectToSQL
                    ValueFromPipeline=$False)]
         [ValidateNotNullorEmpty()]
         [string]$TableName,
+
+        # The name of the schema where the table is
+        [Parameter(Mandatory=$False,
+                   ParameterSetName='mssql',
+                   HelpMessage="Please specify the schema name. If empty, dbo will be used.",
+                   ValueFromPipeline=$False)]
+        [string]$SchemaName,
         
         # Use this switch if you do not want the table to be created.
         # If the table does not exist an error (per object) will be thrown.
@@ -324,7 +331,7 @@ function Write-ObjectToSQL
             
             $ErrorActionPreference = "Stop"
             
-            $command.CommandText = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME LIKE '$tablename'"
+            $command.CommandText = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '$SchemaName' AND  TABLE_NAME LIKE '$tablename'"
             $adapter = New-Object -TypeName System.Data.SqlClient.SqlDataAdapter $command
             $rowCount = $adapter.Fill($dataset)
 
@@ -480,6 +487,10 @@ function Write-ObjectToSQL
             }
         }
 
+        if ([string]::IsNullOrEmpty($SchemaName)) {
+            $SchemaName = 'dbo'
+        }
+
     }
     Process
     {
@@ -579,7 +590,7 @@ function Write-ObjectToSQL
                         $datatype = $typeresult.$key
                     }
                     catch {
-                        $datatype = ''    
+                        $datatype = ''
                     }
                 }
 
@@ -628,7 +639,7 @@ function Write-ObjectToSQL
                         
             }else{
                 # if we are using SQL Server then we want to have an 'id' column and a 'inserted_at' column and because of that we dont have to remove the first comma
-                $createquery = "CREATE TABLE $tablename ([id] [int] IDENTITY(1,1) NOT NULL, [inserted_at] [datetime] NULL default(getdate()) $querystring)"
+                $createquery = "CREATE TABLE $SchemaName.$tablename ([id] [int] IDENTITY(1,1) NOT NULL, [inserted_at] [datetime] NULL default(getdate()) $querystring)"
             }
                 
             Write-Verbose "Create query: $createquery"
@@ -754,7 +765,7 @@ function Write-ObjectToSQL
         if ($ConnectionString){
             $insertstring = "INSERT INTO $tablename ( $insertcolumns ) VALUES ( $insertvalues )"
         }else{
-            $insertstring = "INSERT INTO $tablename ( $insertcolumns ) VALUES ( $insertvalues )"
+            $insertstring = "INSERT INTO $SchemaName.$tablename ( $insertcolumns ) VALUES ( $insertvalues )"
         }
 
         Write-Verbose "Insert query generated: $insertstring"
