@@ -582,7 +582,10 @@ function Write-ObjectToSQL
                         $datatype = ''    
                     }
                 }
-
+				
+				# If data type shows as "System.Nullable[DataType]" then show as just 'DataType'
+				$datatype = $datatype.Replace('System.Nullable[', '').Replace(']', '')
+				
                 # go through all property types to see if they exist in the hash tables with supported data types ($numbertypes and $stringtypes)
                 # if a data type doesnt exist in the hash tables then add it to ignore list ($removeFromSample)
                 try {
@@ -693,6 +696,9 @@ function Write-ObjectToSQL
                     $datatype = ''    
                 }
             }
+			
+			# If data type shows as "System.Nullable[DataType]" then show as just 'DataType'
+			$datatype = $datatype.Replace('System.Nullable[', '').Replace(']', '')
 
             # go through the number types and the string types array to see if the property type is supported
             # if its supported, generate the strings for the database query

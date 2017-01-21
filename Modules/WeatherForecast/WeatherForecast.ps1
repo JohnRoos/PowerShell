@@ -9,9 +9,9 @@ class ForeCast {
     # General
     [decimal]$Temperature # celsius
     [int]$RelativeHumidity # percent
-    [int]$ThunderstormProbability # percent
+    [int]$ThunderProbability # percent
     [decimal]$Visibility # kilometers
-    [decimal]$MeanSeaLevel # hPa : Pressure reduced to medium sea level
+    [decimal]$AirPressure # hPa : Pressure reduced to medium sea level
     # Clouds
     [int]$LowCloudCover # 0-8 
     [int]$MediumCloudCover # 0-8
@@ -19,12 +19,17 @@ class ForeCast {
     [int]$TotalCloudCover # 0-8
     # Precipitation
     [string]$PrecipitationCategory # see method SetPrecipitationCategory
-    [decimal]$SnowPrecipitationIntensity # millimeter
-    [decimal]$TotalPrecipitationIntensity # millimeter
+    #[decimal]$SnowPrecipitationIntensity # millimeter
+    [decimal]$MinimumPrecipitationIntensity # millimeter per hour
+    [decimal]$MaximumPrecipitationIntensity # millimeter per hour
     # Wind
     [int]$WindDirection # degree
     [decimal]$WindGustVelocity # m/s
     [decimal]$WindVelocity # m/s
+    # Weather symbol
+    [string]$WeatherSymbol  # see method SetWeatherSymbol
+
+    
 
     [void] SetPrecipitationCategory ([int] $i)
     {
@@ -41,6 +46,31 @@ class ForeCast {
             Default { Write-Error 'Unknown Precipitation Category - Parameter must be between 0 and 6.' }
         }
         $this.PrecipitationCategory = $cat
+    }
+
+    [void] SetWeatherSymbol ([int] $i)
+    {
+        [string]$cat = ""
+        switch ($i)
+        {
+            1  { $cat = 'Clear sky' }
+            2  { $cat = 'Nearly clear sky' }
+            3  { $cat = 'Variable cloudiness' }
+            4  { $cat = 'Halfclear sky' }
+            5  { $cat = 'Cloudy sky' }
+            6  { $cat = 'Overcast' }
+            7  { $cat = 'Fog' }
+            8  { $cat = 'Rain showers' }
+            9  { $cat = 'Thunderstorm' }
+            10 { $cat = 'Light sleet' }
+            11 { $cat = 'Snow showers' }
+            12 { $cat = 'Rain' }
+            13 { $cat = 'Thunder' }
+            14 { $cat = 'Sleet' }
+            15 { $cat = 'Snowfall' }
+            Default { Write-Error 'Unknown Weather Symbol - Parameter must be between 1 and 15.' }
+        }
+        $this.WeatherSymbol = $cat
     }
 }
 
@@ -75,7 +105,7 @@ class WeatherForeCast {
     }
 
     # This might be used later. Under construction.
-    [ForeCast] GetForeCast ([datetime]$x) {
+    hidden [ForeCast] GetForeCast ([datetime]$x) {
         return $this.ForeCast
     }
 
@@ -94,37 +124,47 @@ class WeatherForeCast {
             $this.SetGeoLocation()
         }
 
-        $lat = $this.Latitude
-        $lon = $this.Longitude
-        $uri = "http://opendata-download-metfcst.smhi.se/api/category/pmp1.5g/version/1/geopoint/lat/$lat/lon/$lon/data.json"
+        $lat = $this.Latitude.ToString().Replace(',','.')
+        $lon = $this.Longitude.ToString().Replace(',','.')
+        
+        #Old API
+        #$uri = "http://opendata-download-metfcst.smhi.se/api/category/pmp1.5g/version/1/geopoint/lat/$lat/lon/$lon/data.json"
+
+        #New API
+        $uri = "http://opendata-download-metfcst.smhi.se/api/category/pmp2g/version/2/geotype/point/lon/$lon/lat/$lat/data.json"
+
         $RAWforecast = Invoke-RestMethod -Method Get -Uri $uri
 
         foreach ($current in $RAWforecast.timeseries) {
             $props = @{
-                HighCloudCover              = $current.hcc
-                LowCloudCover               = $current.lcc
-                MediumCloudCover            = $current.mcc
-                MeanSeaLevel                = $current.msl
-                SnowPrecipitationIntensity  = $current.pis
-                TotalPrecipitationIntensity = $current.pit
-                RelativeHumidity            = $current.r
-                Temperature                 = $current.t
-                TotalCloudCover             = $current.tcc
-                ThunderstormProbability     = $current.tstm
-                ValidTime                   = $current.ValidTime
-                Visibility                  = $current.vis
-                WindDirection               = $current.wd
-                WindGustVelocity            = $current.gust
-                WindVelocity                = $current.ws
+                    ValidTime                     = $current.ValidTime
+                    HighCloudCover                = ($current.parameters | Where-Object name -eq 'hcc_mean').values | Select-Object -First 1
+                    LowCloudCover                 = ($current.parameters | Where-Object name -eq 'lcc_mean').values | Select-Object -First 1
+                    MediumCloudCover              = ($current.parameters | Where-Object name -eq 'mcc_mean').values | Select-Object -First 1
+                    AirPressure                   = ($current.parameters | Where-Object name -eq 'msl').values | Select-Object -First 1
+                    MinimumPrecipitationIntensity = ($current.parameters | Where-Object name -eq 'pmin').values | Select-Object -First 1
+                    MaximumPrecipitationIntensity = ($current.parameters | Where-Object name -eq 'pmax').values | Select-Object -First 1
+                    RelativeHumidity              = ($current.parameters | Where-Object name -eq 'r').values | Select-Object -First 1
+                    Temperature                   = ($current.parameters | Where-Object name -eq 't').values | Select-Object -First 1
+                    TotalCloudCover               = ($current.parameters | Where-Object name -eq 'tcc_mean').values | Select-Object -First 1
+                    ThunderProbability            = ($current.parameters | Where-Object name -eq 'tstm').values | Select-Object -First 1
+                    Visibility                    = ($current.parameters | Where-Object name -eq 'vis').values | Select-Object -First 1
+                    WindDirection                 = ($current.parameters | Where-Object name -eq 'wd').values | Select-Object -First 1
+                    WindGustVelocity              = ($current.parameters | Where-Object name -eq 'gust').values | Select-Object -First 1
+                    WindVelocity                  = ($current.parameters | Where-Object name -eq 'ws').values | Select-Object -First 1
             }
+            $PrecipicationCategoryID = ($current.parameters | Where-Object name -eq 'pcat').values | Select-Object -First 1
+            $WeatherSymbolID         = ($current.parameters | Where-Object name -eq 'Wsymb').values | Select-Object -First 1
 
             $fc = New-Object -TypeName ForeCast -Property $props
-            $fc.SetPrecipitationCategory($current.pcat)
+            $fc.SetPrecipitationCategory($PrecipicationCategoryID)
+            $fc.SetWeatherSymbol($WeatherSymbolID)
 
             $this.AddForeCast($fc)
         }
     }
 }
+
 
 break
 
@@ -132,7 +172,8 @@ break
 $forecastseries = [WeatherForeCast]::new()
 $forecastseries.DownloadForeCast()
 $forecastseries
-$forecastseries.ForeCast
+$forecastseries.ForeCast | select -First 10
+
 
 # Inspect the object
 $forecastseries | gm
