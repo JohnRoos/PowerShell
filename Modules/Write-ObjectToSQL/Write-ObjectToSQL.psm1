@@ -64,7 +64,7 @@
        Guid
 
 
-   Version 1.11
+   Version 1.12
    Created by John Roos 
    Email: john@roostech.se
    Web: http://blog.roostech.se
@@ -183,6 +183,7 @@
                     Improved the GUID support to use uniqueidentifier when creating the table
                     Added the optional parameter PrimaryKey (thanks to lw-schick on GitHub for this idea)
                         When PrimaryKey is used, that column will be set to NOT NULL when creating the table
+                    Added the SchemaName parameter to select which schema the table should have (thanks to lw-schick on GitHub for adding this)
 
 
 .LINK
@@ -502,6 +503,10 @@ function Write-ObjectToSQL
 
         $ObjectIsHash = $false
 
+        if ([string]::IsNullOrEmpty($SchemaName)) {
+            $SchemaName = 'dbo'
+        }
+
         # are we using SQL Server (empty connection string)?
         # does a table exist with this name?
         # as long as 'DoNotCreateTable' is not used ($tablecreated is true if DoNotCreateTable is used).
@@ -519,10 +524,7 @@ function Write-ObjectToSQL
                 Write-Verbose 'Table does not exist in database (creation needed)'
             }
         }
-
-        if ([string]::IsNullOrEmpty($SchemaName)) {
-            $SchemaName = 'dbo'
-        }
+     
 
     }
     Process
