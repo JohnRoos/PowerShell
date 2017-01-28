@@ -64,7 +64,7 @@
        Guid
 
 
-   Version 1.10
+   Version 1.12
    Created by John Roos 
    Email: john@roostech.se
    Web: http://blog.roostech.se
@@ -179,6 +179,12 @@
                     Changed Write-Host to Write-Output to follow best practice.
                     Removed initialization of Database parameter in param block.
                     Now the PSScriptAnalyzer can shut up.
+                    Added logic to handle System.Nullable data types (thanks to beanska on GitHub for adding this)
+                    Improved the GUID support to use uniqueidentifier when creating the table
+                    Added the optional parameter PrimaryKey (thanks to lw-schick on GitHub for this idea)
+                        When PrimaryKey is used, that column will be set to NOT NULL when creating the table
+                    Added the SchemaName parameter to select which schema the table should have (thanks to lw-schick on GitHub for adding this)
+
 
 .LINK
     SQL Server data types                http://msdn.microsoft.com/en-us/library/ms187752.aspx
@@ -252,6 +258,13 @@ function Write-ObjectToSQL
                    ValueFromPipeline=$False)]
         [ValidateNotNullorEmpty()]
         [string]$TableName,
+
+        # The name of the schema where the table is
+        [Parameter(Mandatory=$False,
+                   ParameterSetName='mssql',
+                   HelpMessage="Please specify the schema name. If empty, dbo will be used.",
+                   ValueFromPipeline=$False)]
+        [string]$SchemaName,
         
         # Use this switch if you do not want the table to be created.
         # If the table does not exist an error (per object) will be thrown.
@@ -309,7 +322,18 @@ function Write-ObjectToSQL
                     'Minutes',
                     'Seconds',
                     'Milliseconds')] 
-        [string]$TimeSpanType
+        [string]$TimeSpanType,
+
+        # Optional parameter which sets which object property will be used as primary key when creating the table
+        # Should be a string with the name of the property.
+        [Parameter(Mandatory=$False,
+                   ParameterSetName='othersql',
+                   ValueFromPipeline=$False)]
+        [Parameter(Mandatory=$False,
+                   ParameterSetName='mssql',
+                   ValueFromPipeline=$False)]
+        [ValidateNotNullorEmpty()]
+        [string]$PrimaryKey
     )
 
     Begin
@@ -324,7 +348,7 @@ function Write-ObjectToSQL
             
             $ErrorActionPreference = "Stop"
             
-            $command.CommandText = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME LIKE '$tablename'"
+            $command.CommandText = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '$SchemaName' AND  TABLE_NAME LIKE '$tablename'"
             $adapter = New-Object -TypeName System.Data.SqlClient.SqlDataAdapter $command
             $rowCount = $adapter.Fill($dataset)
 
@@ -383,8 +407,8 @@ function Write-ObjectToSQL
             'string'          = 'nvarchar(1000)';
             'bool'            = 'bit';
             'System.Boolean'  = 'bit';
-            'Guid'            = 'nvarchar(40)'
-            'System.Guid'     = 'nvarchar(40)'
+            'Guid'            = 'uniqueidentifier';
+            'System.Guid'     = 'uniqueidentifier';
         }
 
         $reservedcolumns = @{
@@ -411,6 +435,23 @@ function Write-ObjectToSQL
         if ($DoNotCreateTable){
             $createtable = $false
         }
+
+        # Prepare the Primary Key if selected
+        # The name of the primary key need to be unique, so lets add a GUID to the name
+        # This does not look very nice in the database, but its optional
+        # Also make sure that the name is changed according to the reserved columns variable to be consistent
+        # This SQL syntax should work in MySQL / SQL Server / Oracle / MS Access
+        $pkGUID = ([guid]::NewGuid()).tostring().replace('-','')
+        if ($PrimaryKey) {
+            $PrimaryKeyCorrected = $PrimaryKey.Replace(' ','_')
+            if ($reservedcolumns.Keys -contains $PrimaryKeyCorrected) {
+                $PrimaryKeyCorrected = "$($reservedcolumns.$PrimaryKeyCorrected)$PrimaryKeyCorrected"
+            }
+            $PrimaryKeyString = ", CONSTRAINT pk_$($PrimaryKeyCorrected)_$pkGUID PRIMARY KEY ($PrimaryKeyCorrected)"
+        } else {
+            $PrimaryKeyString = ''
+        }
+
 
         $ignoredSamplesRemoved = $false
 
@@ -462,6 +503,10 @@ function Write-ObjectToSQL
 
         $ObjectIsHash = $false
 
+        if ([string]::IsNullOrEmpty($SchemaName)) {
+            $SchemaName = 'dbo'
+        }
+
         # are we using SQL Server (empty connection string)?
         # does a table exist with this name?
         # as long as 'DoNotCreateTable' is not used ($tablecreated is true if DoNotCreateTable is used).
@@ -479,6 +524,7 @@ function Write-ObjectToSQL
                 Write-Verbose 'Table does not exist in database (creation needed)'
             }
         }
+     
 
     }
     Process
@@ -579,7 +625,7 @@ function Write-ObjectToSQL
                         $datatype = $typeresult.$key
                     }
                     catch {
-                        $datatype = ''    
+                        $datatype = ''
                     }
                 }
 				
@@ -590,12 +636,22 @@ function Write-ObjectToSQL
                 # if a data type doesnt exist in the hash tables then add it to ignore list ($removeFromSample)
                 try {
                     if ( $numbertypes.ContainsKey( $datatype ) ){
-                        $querystring += ", $quoteFirst$prekey$($key.Replace(' ','_'))$quoteLast $($numbertypes.($datatype)) NULL"
+                        $querystring += ", $quoteFirst$prekey$($key.Replace(' ','_'))$quoteLast $($numbertypes.($datatype))"
+                        if ($PrimaryKey) {
+                            if ($key -ne $PrimaryKey) {
+                                $querystring += " NULL"
+                            }
+                        }
                         $acceptedcolumns++
                     }elseif ( $stringtypes.ContainsKey( $datatype ) ){
                         $columnname = $key -replace "'", ""
                         $columnname = $key -replace '"', ''
-                        $querystring += ", $quoteFirst$prekey$($columnname.Replace(' ','_'))$quoteLast $($stringtypes.($datatype)) NULL"
+                        $querystring += ", $quoteFirst$prekey$($columnname.Replace(' ','_'))$quoteLast $($stringtypes.($datatype))"
+                        if ($PrimaryKey) {
+                            if ($key -ne $PrimaryKey) {
+                                $querystring += " NULL"
+                            }
+                        }
                         $acceptedcolumns++
                     }else{
                         Write-Verbose "$key contains an unsupported data type. ($datatype)"
@@ -627,11 +683,34 @@ function Write-ObjectToSQL
             if ($ConnectionString){
                 # remove the first comma in $querystring
                 $querystring = $querystring.Substring(1)
-                $createquery = "CREATE TABLE $tablename ($querystring)"
-                        
+                # If the Primary Key parameter is used, validate it against the data sample to make sure its an existing column
+                if ($PrimaryKey) {
+                    if ($datasample.keys -contains $PrimaryKey) {
+                         $createquery = "CREATE TABLE $tablename ($querystring $PrimaryKeyString)"
+                    } else {
+                        # If we arrive here that means that a Primary Key was used which has not been included among the columns in the create table string
+                        # This could mean that the property has been ignored (unhandled data type) or that it was spelled wrong
+                        Write-Error "The selected column for primary key ($PrimaryKey) does not exist."
+                        break
+                    }
+                } else {
+                    $createquery = "CREATE TABLE $tablename ($querystring)"
+                }
             }else{
                 # if we are using SQL Server then we want to have an 'id' column and a 'inserted_at' column and because of that we dont have to remove the first comma
-                $createquery = "CREATE TABLE $tablename ([id] [int] IDENTITY(1,1) NOT NULL, [inserted_at] [datetime] NULL default(getdate()) $querystring)"
+                # If the Primary Key parameter is used, validate it against the data sample to make sure its an existing column
+                if ($PrimaryKey) {
+                    if ($datasample.keys -contains $PrimaryKey) {
+                        $createquery = "CREATE TABLE $SchemaName.$tablename ([id] [int] IDENTITY(1,1) NOT NULL, [inserted_at] [datetime] NULL default(getdate()) $querystring $PrimaryKeyString)"
+                    } else {
+                        # If we arrive here that means that a Primary Key was used which has not been included among the columns in the create table string
+                        # This could mean that the property has been ignored (unhandled data type) or that it was spelled wrong
+                        Write-Error "The selected column for primary key ($PrimaryKey) does not exist."
+                        break
+                    }
+                } else {
+                    $createquery = "CREATE TABLE $SchemaName.$tablename ([id] [int] IDENTITY(1,1) NOT NULL, [inserted_at] [datetime] NULL default(getdate()) $querystring)"
+                }
             }
                 
             Write-Verbose "Create query: $createquery"
@@ -760,7 +839,7 @@ function Write-ObjectToSQL
         if ($ConnectionString){
             $insertstring = "INSERT INTO $tablename ( $insertcolumns ) VALUES ( $insertvalues )"
         }else{
-            $insertstring = "INSERT INTO $tablename ( $insertcolumns ) VALUES ( $insertvalues )"
+            $insertstring = "INSERT INTO $SchemaName.$tablename ( $insertcolumns ) VALUES ( $insertvalues )"
         }
 
         Write-Verbose "Insert query generated: $insertstring"
