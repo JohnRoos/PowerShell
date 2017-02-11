@@ -64,7 +64,7 @@
        Guid
 
 
-   Version 1.12
+   Version 1.13
    Created by John Roos 
    Email: john@roostech.se
    Web: http://blog.roostech.se
@@ -184,6 +184,7 @@
                     Added the optional parameter PrimaryKey (thanks to lw-schick on GitHub for this idea)
                         When PrimaryKey is used, that column will be set to NOT NULL when creating the table
                     Added the SchemaName parameter to select which schema the table should have (thanks to lw-schick on GitHub for adding this)
+                    Fixed a bug where zeroes were sometimes treated as null values (thanks to acheung456 in GitHub for reporting this)
 
 
 .LINK
@@ -786,7 +787,7 @@ function Write-ObjectToSQL
                 if ( $numbertypes.ContainsKey( $datatype ) ){
                     $null = $strBuilderColumns.Append(", $quoteFirst$prekey$($key.Replace(' ','_'))$quoteLast")
 
-                    if ($($InputObject.$key)){
+                    if ($($InputObject.$key) -ne $null){
                         if ($datatype -eq 'timespan' -or $datatype -eq 'System.TimeSpan') {
                             Write-Verbose "Timespan found ($key). Converting to ticks."
                             $null = $strBuilderValues.Append(", $(($InputObject.$key).Ticks)")
