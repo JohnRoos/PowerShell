@@ -2,7 +2,7 @@ A collection of useful PowerShell modules and scripts.
 # Modules
 The following modules are available in this repository.
 ### Write-ObjectToSQL
-This Powershell cmdlet inserts properties of an object into a table. The table will be created if it doesnt exist. The cmdlet accepts object from the pipeline which makes this very useful when you want to easily save the output from a script in a database.
+This cmdlet accepts any type of object and will insert it into a database table, one row per object coming down the pipeline. If the table does not exist it will be created based on the properties of the first object in the pipeline. You can send pretty much anything to this cmdlet which makes it very useful when you want to quickly save the output from a script to a database.
 ### IniManager
 This module contains 7 cmdlets for managing ini files.
 ### WeatherForecast
