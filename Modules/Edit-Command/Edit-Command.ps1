@@ -1,4 +1,4 @@
-﻿function Edit-Command {
+function Edit-Command {
  
     [CmdletBinding()]
     [OutputType([void])]
