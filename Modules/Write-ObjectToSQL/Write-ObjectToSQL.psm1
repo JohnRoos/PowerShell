@@ -64,7 +64,7 @@
        Guid
 
 
-   Version 1.13
+   Version 1.14
    Created by John Roos 
    Email: john@roostech.se
    Web: http://blog.roostech.se
@@ -185,6 +185,9 @@
                         When PrimaryKey is used, that column will be set to NOT NULL when creating the table
                     Added the SchemaName parameter to select which schema the table should have (thanks to lw-schick on GitHub for adding this)
                     Fixed a bug where zeroes were sometimes treated as null values (thanks to acheung456 in GitHub for reporting this)
+                    Added conversion of linebreaks from PS to SQL
+                    Changed nvarchar(1000) to nvarchar(MAX) as default
+                    Changed varchar(1000) to varchar(MAX) as default
 
 
 .LINK
@@ -402,10 +405,10 @@ function Write-ObjectToSQL
             
         $stringtypes = @{
         #   PS datatype       = SQL data type
-            'System.String'   = 'nvarchar(1000)';
+            'System.String'   = 'nvarchar(MAX)';
             'System.DateTime' = 'datetime';
             'datetime'        = 'datetime';
-            'string'          = 'nvarchar(1000)';
+            'string'          = 'nvarchar(MAX)';
             'bool'            = 'bit';
             'System.Boolean'  = 'bit';
             'Guid'            = 'uniqueidentifier';
@@ -800,6 +803,10 @@ function Write-ObjectToSQL
                     }
                 }elseif ( $stringtypes.ContainsKey( $datatype ) ){
                     $null = $strBuilderColumns.Append(", $quoteFirst$prekey$($key.Replace(' ','_'))$quoteLast")
+                    # convert line breaks from PS to T-SQL
+                    $strtmp = $InputObject.$key -replace "`n", "' + CHAR(13) + '"
+                    $strtmp = $InputObject.$key -replace "`r", "' + CHAR(13) + '"
+                    # handle single quotes
                     $strtmp = $InputObject.$key -replace "'", "''"
                     if ($ConnectionString){ 
                         $null = $strBuilderValues.Append(", '$strtmp'")
