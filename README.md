@@ -11,6 +11,8 @@ Contains a PowerShell class which is used for getting weather forecasts from SMH
 This module contains a cmdlet which can be used to edit other cmdlets in PowerShell ISE.
 ### Get-IMDBmovie
 This module contains a cmdlet for getting information about movies from IMDB.
+### Get-ParamHelp
+This module contains a few cmdlets to make it easier to get help about parameter validation when writing advanced functions in PowerShell.
 # DSC Resources
 The following DSC resource is available in this repository.
 ### cIniFile
