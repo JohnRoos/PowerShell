@@ -1,0 +1,378 @@
+[
+    {
+        "Name":  "ValueFromPipeline",
+        "Type":  "Argument",
+        "Parent":  "Parameter",
+        "Description":  "The ValueFromPipeline argument indicates that the parameter accepts input from a pipeline object. Specify this argument if the function accepts the entire object, not just a property of the object.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "[parameter(ValueFromPipeline=$true)]",
+                             "Description":  "Enabled"
+                         },
+                         {
+                             "Id":  2,
+                             "Example":  "[parameter(ValueFromPipeline=$false)]",
+                             "Description":  "Disabled (default)"
+                         },
+                         {
+                             "Id":  3,
+                             "Example":  "Function Get-ProcessID\r\n{\r\n    Param\r\n    (\r\n        [Parameter(ValueFromPipeline=$true)] \r\n        $Process\r\n    )\r\n    Get-Process -Name $Process | Select-Object -ExpandProperty id\r\n}",
+                             "Description":  "Defines the parameter \"Process\" to accept value from the pipeline."
+                         }
+                     ],
+        "Links":  [
+                      {
+                          "Uri":  "https://msdn.microsoft.com/en-us/library/system.management.automation.parameterattribute.valuefrompipeline(v=vs.85).aspx",
+                          "Description":  "ParameterAttribute.ValueFromPipeline Property (MSDN)"
+                      }
+                  ]
+    },
+    {
+        "Name":  "ValueFromPipelineByPropertyName",
+        "Type":  "Argument",
+        "Parent":  "Parameter",
+        "Description":  "The valueFromPipelineByPropertyName argument indicates that the parameter accepts input from a property of a pipeline object. The object property must have the same name or alias as the parameter.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "[parameter(ValueFromPipelineByPropertyName=$true)]",
+                             "Description":  "Enabled"
+                         },
+                         {
+                             "Id":  2,
+                             "Example":  "[parameter(ValueFromPipelineByPropertyName=$false)]",
+                             "Description":  "Disabled (default)"
+                         }
+                     ],
+        "Links":  [
+                      {
+                          "Uri":  "https://msdn.microsoft.com/en-us/library/system.management.automation.parameterattribute.valuefrompipelinebypropertyname(v=vs.85).aspx",
+                          "Description":  "ParameterAttribute.ValueFromPipelineByPropertyName Property (MSDN)"
+                      }
+                  ]
+    },
+    {
+        "Name":  "Parameter",
+        "Type":  "Attribute",
+        "Parent":  "",
+        "Description":  "The Parameter attribute is used to declare the attributes of function parameters.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "[parameter(Argument=Value)]",
+                             "Description":  "Declares validation argument for parameter."
+                         }
+                     ],
+        "Links":  [
+                      {
+                          "Uri":  "https://msdn.microsoft.com/en-us/library/ms714348(v=vs.85).aspx",
+                          "Description":  "Parameter Attribute Declaration (MSDN)"
+                      },
+                      {
+                          "Uri":  "https://msdn.microsoft.com/en-us/library/system.management.automation.parameterattribute(v=vs.85).aspx",
+                          "Description":  "ParameterAttribute Class (MSDN)"
+                      }
+                  ]
+    },
+    {
+        "Name":  "Mandatory",
+        "Type":  "Argument",
+        "Parent":  "Parameter",
+        "Description":  "Makes a parameter mandatory.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "Param\r\n(\r\n    [Parameter(Mandatory=$true)]\r\n    $Param1\r\n)",
+                             "Description":  "Sets the parameter Param1 to mandatory."
+                         }
+                     ],
+        "Links":  [
+                      {
+                          "Uri":  "https://msdn.microsoft.com/en-us/library/ms714348(v=vs.85).aspx",
+                          "Description":  "Parameter Attribute Declaration (MSDN)"
+                      },
+                      {
+                          "Uri":  "https://msdn.microsoft.com/en-us/library/system.management.automation.parameterattribute.mandatory(v=vs.85).aspx",
+                          "Description":  "ParameterAttribute.Mandatory Property (MSDN)"
+                      }
+                  ]
+    },
+    {
+        "Name":  "Position",
+        "Type":  "Argument",
+        "Parent":  "Parameter",
+        "Description":  "Defines which position the parameter has, if parameter names are not specified. If Position is not defined, the name has to be used.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "[parameter(Position=0)]",
+                             "Description":  "Sets the position to the first parameter if parameter name is omitted."
+                         }
+                     ],
+        "Links":  [
+                      {
+                          "Uri":  "https://msdn.microsoft.com/en-us/library/ms714348(v=vs.85).aspx",
+                          "Description":  "Parameter Attribute Declaration (MSDN)"
+                      }
+                  ]
+    },
+    {
+        "Name":  "ParameterSetName",
+        "Type":  "Argument",
+        "Parent":  "Parameter",
+        "Description":  "Defines which parameter set a parameter belongs to. Multiple sets can be used. Parameters belonging to other sets will be filtered out if a set parameter is selected.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "[parameter(ParameterSetName=\"MySetName\")]",
+                             "Description":  "Sets the parameter set name to \"MySetName\"."
+                         }
+                     ],
+        "Links":  [
+                      {
+                          "Uri":  "https://msdn.microsoft.com/en-us/library/ms714348(v=vs.85).aspx",
+                          "Description":  "Parameter Attribute Declaration (MSDN)"
+                      }
+                  ]
+    },
+    {
+        "Name":  "ValueFromRemainingArguments",
+        "Type":  "Argument",
+        "Parent":  "Parameter",
+        "Description":  "Sets the parameter to accept all remaining parameters which are not defined by other parameters.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "param\r\n(\r\n    [parameter(ValueFromRemainingArguments=$true)]\r\n    [string[]]$Name\r\n)",
+                             "Description":  "The the parameter Name accepts all remaining values passed to the function."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "HelpMessage",
+        "Type":  "Argument",
+        "Parent":  "Parameter",
+        "Description":  "String with a description of the parameter which will prompt the user for mandatory parameters if not specified.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "param\r\n(\r\n    [parameter(mandatory=$true,\r\n               helpmessage=\"Enter the name of the service\")]\r\n    [string]$Service\r\n)",
+                             "Description":  "This example defines a aelp message for the Service parameter."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "Alias",
+        "Type":  "Attribute",
+        "Parent":  "",
+        "Description":  "Defines an alias for the parameter.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "Param\r\n(\r\n    [parameter()]\r\n    [alias(\"computer\",\"name\")]\r\n    [String]$Hostname\r\n)",
+                             "Description":  "Adds computer and name as aliases to the ComputerName parameter."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "AllowNull",
+        "Type":  "Validation attribute",
+        "Parent":  "",
+        "Description":  "Sets the parameter to accept $null to be submitted.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "Param\r\n(\r\n    [parameter(Mandatory=$true)]\r\n    [AllowNull()]\r\n    [String]$Service\r\n)",
+                             "Description":  "Sets the mandatory parameter Service to accept a null value."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "AllowEmptyString",
+        "Type":  "Validation attribute",
+        "Parent":  "",
+        "Description":  "Sets a mandatory parameter to accept an empty string.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "Param\r\n(\r\n    [parameter(Mandatory=$true)]\r\n    [AllowEmptyString()]\r\n    [String]$Service\r\n)",
+                             "Description":  "Sets the mandatory parameter Service to accept an empty string."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "AllowEmptyCollection",
+        "Type":  "Validation attribute",
+        "Parent":  "",
+        "Description":  "Sets a mandatory parameter to accept an empty collection (array).",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "Param\r\n(\r\n    [parameter(Mandatory=$true)]\r\n    [AllowEmptyCollection()]\r\n    [String[]]$Service\r\n)",
+                             "Description":  "Sets the mandatory parameter Service to accept an empty collection."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "ValidateCount",
+        "Type":  "Validation attribute",
+        "Parent":  "",
+        "Description":  "Specifies the amount of values the parameter will accept.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "Param\r\n(\r\n    [parameter()]\r\n    [ValidateCount(1,3)]\r\n    [String[]]$Service\r\n)",
+                             "Description":  "Sets the optional parameter Service to accept between one and three values."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "ValidateLength",
+        "Type":  "Validation attribute",
+        "Parent":  "",
+        "Description":  "Specifies the amount of characters in the value which the parameter will accept.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "Param\r\n(\r\n    [parameter()]\r\n    [ValidateLength(1,12)]\r\n    [String]$Service\r\n)",
+                             "Description":  "Sets the parameter Service to accept values which contain between one and twelve characters."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "ValidatePattern",
+        "Type":  "Validation attribute",
+        "Parent":  "",
+        "Description":  "Regular expression which will be compared with the parameter value for validation.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "param\r\n(\r\n    [parameter()]\r\n    [ValidatePattern(\u0027^[a-zA-Z0-9]+$\u0027)]\r\n    [String]$Service\r\n)",
+                             "Description":  "Sets the parameter Service to only accept alphanumeric characters."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "ValidateRange",
+        "Type":  "Validation attribute",
+        "Parent":  "",
+        "Description":  "Specifies a numeric range which the parameter value can contain.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "param\r\n(\r\n    [parameter()]\r\n    [ValidateRange(0,9)]\r\n    [int]$Small\r\n)",
+                             "Description":  "Sets the parameter Small to only accept numbers between 0 and 9."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "ValidateScript",
+        "Type":  "Validation attribute",
+        "Parent":  "",
+        "Description":  "Specifies a script to verify the parameter value. The parameter value will be piped into the scriptblock. Validation will succeed if the script does not return $false or error.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "param\r\n(\r\n    [parameter()]\r\n    [ValidateScript({$_ -like \u0027Z*\u0027})]\r\n    [string]$Name\r\n)",
+                             "Description":  "Sets the parameter Name to require a string starting with the letter Z."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "ValidateSet",
+        "Type":  "Attribute",
+        "Parent":  "",
+        "Description":  "Specifies a set of approved parameter values. Only the values in the set will be accepted for the parameter or variable. If variables are used, they need to be constant. Since constant variables are accepted, enumerations can be used as well. A scriptblock can also be passed to the ValidateSet attribute, but this is rarely seen.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "Param\r\n(\r\n    [ValidateSet(\"Cat\", \"Dog\", \"Fish\")]\r\n    [string]$Pet\r\n)",
+                             "Description":  "The Pet parameter will only accept the strings Cat, Dog or Fish."
+                         },
+                         {
+                             "Id":  2,
+                             "Example":  "Param\r\n(\r\n    [ValidateSet(1,2,3,4,5)]\r\n    [int]$Number\r\n)",
+                             "Description":  "This parameter will only accept numbers in the range 1-5."
+                         },
+                         {
+                             "Id":  3,
+                             "Example":  "Param\r\n(\r\n    [DayOfWeek]$Weekday\r\n)",
+                             "Description":  "Instead of using ValidateSet its possible to use enumerations to accomplish a similar result. In this example [DayOfWeek] is an enum which contains the names of the days of the week."
+                         },
+                         {
+                             "Id":  4,
+                             "Example":  "$ValidateServiceType = @\"\r\n    public enum ValidateService\r\n    {\r\n        `n$(foreach ($name in (Get-Service -Name a*).Name){\"`t$name`,\"})`n\r\n    }\r\n\"@\r\nAdd-Type -TypeDefinition $ValidateServiceType\r\n\r\nfunction Get-ServiceName\r\n{\r\n    [CmdletBinding()]\r\n    Param\r\n    (\r\n        [ValidateService]$Name\r\n    )\r\n    return $Name\r\n}",
+                             "Description":  "Since enumerations are allowed and can accomplish similar results as ValidateSet, you can create your own enumeration to validate with. This example validates the Name parameter with service names starting with the letter \u0027a\u0027."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "ValidateNotNull",
+        "Type":  "Validation attribute",
+        "Parent":  "",
+        "Description":  "Specifies that the parameter value cannot contain $null.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "param\r\n(\r\n    [parameter()]\r\n    [ValidateNotNull()]\r\n    $Name\r\n)",
+                             "Description":  "The value for the parameter Name cannot be null."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    },
+    {
+        "Name":  "ValidateNotNullOrEmpty",
+        "Type":  "Validation attribute",
+        "Parent":  "",
+        "Description":  "Specifies that the parameter value cannot contain $null or be an empty string.",
+        "Examples":  [
+                         {
+                             "Id":  1,
+                             "Example":  "param\r\n(\r\n    [parameter()]\r\n    [ValidateNotNullOrEmpty()]\r\n    [string]$Name\r\n)",
+                             "Description":  "The value for the parameter Name cannot be null or empty."
+                         }
+                     ],
+        "Links":  [
+
+                  ]
+    }
+]
