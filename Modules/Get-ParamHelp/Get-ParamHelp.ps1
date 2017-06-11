@@ -1,7 +1,8 @@
 ﻿
 #region functions
 function Get-ParamHelp {
-    [CmdletBinding(HelpUri = 'http://blog.roostech.se/')]    
+    [CmdletBinding(HelpUri = 'http://blog.roostech.se/')]
+    [OutputType([String],[PSObject])]
     param (    
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$true,
@@ -138,6 +139,7 @@ function Add-ParamHelp {
     }
     
 }
+  #add ShouldProcess
 function Set-ParamHelp {
     [CmdletBinding(HelpUri = 'http://blog.roostech.se/')]    
     param (    
@@ -237,6 +239,7 @@ function Add-ParamHelpExample {
         SaveJsonData -data $allobjects 
     }
 }
+  #add ShouldProcess
 function Set-ParamHelpExample {
     [CmdletBinding(HelpUri = 'http://blog.roostech.se/')]    
     param (    
@@ -323,7 +326,6 @@ function Remove-ParamHelpExample {
             if ($allobjects[$i].Name -eq $Name) {
                 Write-Verbose "Found base object. Looking for example id."
                 $NewExampleArray = @()
-                $ExamplesFound = @()
                 foreach ($example in $allobjects[$i].Examples){
                     if ($ExampleId -notcontains $example.id){
                         Write-Verbose "Not this one"
@@ -349,9 +351,13 @@ function Remove-ParamHelpExample {
 
 #region Todo
 function Add-Link {}
+  #add ShouldProcess
 function Set-Link {}
+  #add ShouldProcess
 function Remove-Link {}
+  #add ShouldProcess
 function Remove-Example {}
+  #add ShouldProcess
 Function Update-ParamHelp {
     # Function to download the latest json file from repo
     # Warn if current file has been modified or should the local file be separate?
