@@ -1,6 +1,5 @@
 ﻿
 #region functions
-
 function Get-ParamHelp {
     [CmdletBinding(HelpUri = 'http://blog.roostech.se/')]    
     param (    
@@ -97,7 +96,6 @@ function Get-ParamHelp {
         return $completestring
     }
 }
-
 function Add-ParamHelp {
     [CmdletBinding(HelpUri = 'http://blog.roostech.se/')]    
     param (    
@@ -140,7 +138,6 @@ function Add-ParamHelp {
     }
     
 }
-
 function Set-ParamHelp {
     [CmdletBinding(HelpUri = 'http://blog.roostech.se/')]    
     param (    
@@ -188,7 +185,6 @@ function Set-ParamHelp {
         
     }
 }
-
 function Add-ParamHelpExample {
     [CmdletBinding(HelpUri = 'http://blog.roostech.se/')]    
     param (    
@@ -241,7 +237,6 @@ function Add-ParamHelpExample {
         SaveJsonData -data $allobjects 
     }
 }
-
 function Set-ParamHelpExample {
     [CmdletBinding(HelpUri = 'http://blog.roostech.se/')]    
     param (    
@@ -297,7 +292,6 @@ function Set-ParamHelpExample {
         SaveJsonData -data $allobjects
     }
 }
-
 function Remove-ParamHelpExample {
     [CmdletBinding(HelpUri = 'http://blog.roostech.se/',
                    SupportsShouldProcess=$true,
@@ -351,28 +345,20 @@ function Remove-ParamHelpExample {
         }
     }
 }
-
 #endregion
 
 #region Todo
-
 function Add-Link {}
-
 function Set-Link {}
-
 function Remove-Link {}
-
 function Remove-Example {}
-
 Function Update-ParamHelp {
     # Function to download the latest json file from repo
     # Warn if current file has been modified or should the local file be separate?
 }
-
 #endregion
 
 #region helper-functions
-
 function GetPaddedString {
     param ([int]$Padding, [string]$String)
     $ConsoleWidth = (Get-Host).UI.RawUI.BufferSize.Width
@@ -404,7 +390,6 @@ function GetPaddedString {
     }
     return $outputString
 }
-
 function ValidateOneMatch {
     param (
         $Name,
@@ -425,11 +410,15 @@ function ValidateOneMatch {
         return $true
     }
 }
-
 function GetJsonData {
     param (
         [string]$Path
     )
+
+    if ([string]::IsNullOrEmpty($Path)) {
+        $Path = Split-Path -Path $PSCommandPath -Parent
+        $Path += '\data.json'
+    }
     
     if (-not (Test-Path -Path $Path)) {
         Throw "Path not found"
@@ -451,7 +440,6 @@ function GetJsonData {
     
     return $jsonobjects
 }
-
 function SaveJsonData {
     param (
         [pscustomobject[]]$data,
@@ -476,7 +464,4 @@ function SaveJsonData {
         Throw "Unable to save json file"
     }
 }
-
-
-
 #endregion

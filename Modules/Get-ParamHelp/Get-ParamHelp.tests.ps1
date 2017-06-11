@@ -113,7 +113,7 @@ Describe "GetJsonData" {
         }
 
         It "Runs normally when a correct Path parameter is provided" {
-            GetJsonData -Path 'C:\git\BitBucket_code\data.json' | Should Not BeNullOrEmpty
+            GetJsonData -Path $jsonfilepath | Should Not BeNullOrEmpty
         }
     
         It "Throws expected error when wrong Path is provided" {
