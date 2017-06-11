@@ -9,7 +9,7 @@ Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.
 
 # data.json path
 $basepath = Split-Path $MyInvocation.MyCommand.Path -Parent
-$jsonfilepath += "$basepath\data.json"
+$jsonfilepath = "$basepath\data.json"
 
 Import-Module $basepath\Get-ParamHelp.ps1 -Force -ErrorAction Stop
 
@@ -118,10 +118,10 @@ Describe "GetJsonData" {
     
         It "Throws expected error when wrong Path is provided" {
             try {
-                GetJsonData -Path 'TestDrive:\wrong-path\data.json}'
+                GetJsonData -Path 'TestDrive:\wrong-path\data.json'
                 Throw "No exception thrown"
             } catch {
-                $_.FullyQualifiedErrorId | Should Be "Path not found"
+                $_.FullyQualifiedErrorId | Should Be "Path not found: TestDrive:\wrong-path\data.json"
             }
         }
 
@@ -187,7 +187,6 @@ Describe "GetJsonData" {
         }
     }
 }
-
 
 Describe "SaveJsonData" {
 
@@ -330,8 +329,9 @@ $linkprops = @{
 }
 
 Describe "Get-ParamHelp" {
- 
+    
     Context "Input" {
+
         It "Executes with no error when parameters are omitted" {
             { Get-ParamHelp } | Should Not Throw
         }
@@ -364,6 +364,12 @@ Describe "Get-ParamHelp" {
             $count = (Get-Content -Path data.json | ConvertFrom-Json).Count
             (Get-ParamHelp).count | Should Be $count
         }
+
+        It "Opens a Url if the Online parameter is used" {
+            Mock Start-Process {return $FilePath}
+            Get-ParamHelp -Name Mandatory -Online | Should Be 'http://blog.roostech.se/p/advancedfunctions.html#Mandatory'
+        }
+
     }
 
     Context "Output objects" {

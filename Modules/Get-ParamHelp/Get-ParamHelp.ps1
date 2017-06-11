@@ -62,7 +62,7 @@ function Get-ParamHelp {
 
         if (!$jsonobjects){
             Throw "Could not find help content searching for '$Name'"
-            break
+            return
        # } elseif ($jsonobjects.count -gt 1 -or $PSBoundParameters['Raw']) {
         } elseif ($jsonobjects.count -gt 1 -or $Raw) {
             return $jsonobjects
@@ -70,7 +70,7 @@ function Get-ParamHelp {
 
         if ($Online) {
             Start-Process -FilePath "http://blog.roostech.se/p/advancedfunctions.html#$($jsonobjects[0].Name)"
-            break
+            return
         }
     
         $jsonobject = $jsonobjects[0]
@@ -421,7 +421,7 @@ function GetJsonData {
     }
     
     if (-not (Test-Path -Path $Path)) {
-        Throw "Path not found"
+        Throw "Path not found: $Path"
     }
 
     $allobjects = Get-Content -Path $Path -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
