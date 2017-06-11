@@ -359,12 +359,76 @@ function Remove-Link {}
 function Remove-Example {}
   #add ShouldProcess
 Function Update-ParamHelp {
-    # Function to download the latest json file from repo
-    # Warn if current file has been modified or should the local file be separate?
+
+    
+    # check local meta by calling GetJsonData -meta
+    $LocalMeta = GetJsonData -Meta
+
+    # warn user if local changes has  been done
+    if ($LocalMeta.Local.Modified) {
+        Write-Warning "ParamHelp data has been locally modified. Use the Force parameter to overwrite all locally saved ParamHelp data."
+        return
+    }
+
+    # call DownloadUpdate with Url from Source in Data.json
+    $DownloadedUpdate = DownloadUpdate -Uri $LocalMeta.Source -ErrorAction Stop
+
+    # compare revision with current, if online version is newer: continue
+    if ($LocalMeta.Revision -lt $DownloadedUpdate.Meta.Revision) {
+        Write-Error "Local revision is newer than the downloaded version. Aborting update."
+        return
+    }
+    
+    # verify required module version, if version required is higher, prompt the user to update the module first
+        # whats the easiest way to check the local module version from within the module?
+
+    # backup existing data.json using SaveJsonData with custom name
+    # update object meta with download date and modified = false
+    # call SaveJsonData to save the file
+    # inform the user that the revision history is available at GitHub (using FileHistory from data.json)
 }
+    
+
 #endregion
 
 #region helper-functions
+
+function DownloadUpdate {
+    [CmdletBinding(HelpUri = 'http://blog.roostech.se/')]
+    param (
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNull()]
+        [Uri]$Uri
+    )
+
+    Process 
+    { 
+        $webrequest = Invoke-WebRequest -Uri $Uri -UseBasicParsing -ErrorAction Stop
+        $converted = ConvertFrom-Json -InputObject $webrequest -ErrorAction Stop
+    
+        # basic verification
+        if ([string]::IsNullOrEmpty($converted.Meta.RequiresModuleVersion))
+        {
+            Write-Error "Cannot use downloaded data. Missing RequiresModuleVersion in Meta"
+        }
+        if (-not [int]::Parse($converted.Meta.Revision))
+        {
+            Write-Error "Cannot use downloaded data. Missing Revision in Meta"
+        }
+        if ([string]::IsNullOrEmpty($converted.ParamHelp[0].Name)) 
+        {
+            Write-Error "Cannot use downloaded data. ParamHelp data is in wrong format. (missing name)"
+        }
+        if ([string]::IsNullOrEmpty($converted.ParamHelp[0].description)) 
+        {
+            Write-Error "Cannot use downloaded data. ParamHelp data is in wrong format. (missing description)"
+        }
+
+        # return entire object, including meta
+        $converted
+    }
+}
+
 function GetPaddedString {
     param ([int]$Padding, [string]$String)
     $ConsoleWidth = (Get-Host).UI.RawUI.BufferSize.Width
@@ -418,7 +482,8 @@ function ValidateOneMatch {
 }
 function GetJsonData {
     param (
-        [string]$Path
+        [string]$Path,
+        [switch]$Meta
     )
 
     if ([string]::IsNullOrEmpty($Path)) {
@@ -431,21 +496,30 @@ function GetJsonData {
     }
 
     $allobjects = Get-Content -Path $Path -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-
-    $jsonobjects = @()
-    foreach ($object in $allobjects) {
-        $props = $object | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
-        if (-not ($props -contains 'Name' -and $props -contains 'Description')) {
-            Throw "Json file is not valid"
+    if ($Meta) {
+        if (($allobjects | Get-Member -MemberType NoteProperty).Name -notcontains 'Meta') {
+            Write-Error "Json file is not valid. Metadata is missing."
+        } else {
+            return $allobjects.Meta
         }
-        $object.PSObject.TypeNames.Insert(0,'ParameterHelp')
-        Add-Member -InputObject $object -MemberType ScriptProperty -Name ExamplesCount -Value {$this.Examples.Count}
-        $jsonobjects += $object
-    }
-    Update-TypeData -TypeName ParameterHelp -DefaultDisplayPropertySet Name, Type, ExamplesCount -Force -WhatIf:$false
+    } else {
+        $jsonobjects = @()
+        foreach ($object in $allobjects.ParamHelp) {
+        
+            $props = $object | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
+            if (-not ($props -contains 'Name' -and $props -contains 'Description')) {
+                Write-Error "Json file is not valid"
+            }
+            $object.PSObject.TypeNames.Insert(0,'ParameterHelp')
+            Add-Member -InputObject $object -MemberType ScriptProperty -Name ExamplesCount -Value {$this.Examples.Count}
+            $jsonobjects += $object
+        }
+        Update-TypeData -TypeName ParameterHelp -DefaultDisplayPropertySet Name, Type, ExamplesCount -Force -WhatIf:$false
     
-    return $jsonobjects
+        return $jsonobjects
+    }
 }
+# add default path, same as GetJsonData
 function SaveJsonData {
     param (
         [pscustomobject[]]$data,
@@ -457,6 +531,11 @@ function SaveJsonData {
         if ($object.psobject.TypeNames -notcontains 'ParameterHelp'){
             Throw "Data parameter only accepts one or more ParameterHelp objects"
         }
+    }
+
+    if ([string]::IsNullOrEmpty($Path)) {
+        $Path = Split-Path -Path $PSCommandPath -Parent
+        $Path += '\data.json'
     }
 
     # move to parameter script validation?
