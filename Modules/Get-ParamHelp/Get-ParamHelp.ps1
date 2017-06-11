@@ -118,7 +118,7 @@ function Add-ParamHelp {
     {
         if ($allobjects.Name -contains $Name) {
             Write-Error "Name already exist"
-            break
+            return
         }
 
         $examples = New-Object -TypeName System.Collections.ArrayList
@@ -159,7 +159,7 @@ function Set-ParamHelp {
     Process {
         
         if (-not (ValidateOneMatch -Name $Name -allobjects $allobjects)) {
-            break
+            return
         }
         # Only one match, continue
 
