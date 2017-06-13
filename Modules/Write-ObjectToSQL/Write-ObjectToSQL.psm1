@@ -523,7 +523,7 @@ function Write-ObjectToSQL
         }
 
         # here we drop our Table if DropTable is true
-        if($DropTable){
+        if($DropTable -And (-Not $DoNotCreateTable)){
             if ($ConnectionString){
                 $dropstring = "DROP TABLE $tablename"
             }else{
