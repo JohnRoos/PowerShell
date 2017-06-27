@@ -337,7 +337,18 @@ function Write-ObjectToSQL
                    ParameterSetName='mssql',
                    ValueFromPipeline=$False)]
         [ValidateNotNullorEmpty()]
-        [string]$PrimaryKey
+
+        [string]$PrimaryKey,
+
+        # Optional Switch to Drop Table before Data is loaded.
+        # This Switch is Usefull if you want to Drop your Table before. (No data Append)
+        [Parameter(Mandatory=$False,
+                   ParameterSetName='mssql',
+                   ValueFromPipeline=$False)]
+        [Parameter(Mandatory=$False,
+                   ParameterSetName='othersql',
+                   ValueFromPipeline=$False)]
+        [switch]$DropTable
     )
 
     Begin
@@ -509,6 +520,26 @@ function Write-ObjectToSQL
 
         if ([string]::IsNullOrEmpty($SchemaName)) {
             $SchemaName = 'dbo'
+        }
+
+        # here we drop our Table if DropTable is true
+        if($DropTable -And (-Not $DoNotCreateTable)){
+            if ($ConnectionString){
+                $dropstring = "DROP TABLE $tablename"
+            }else{
+                $dropstring = "DROP TABLE $SchemaName.$tablename"
+            }
+
+            try {
+                $command = $modconnection.CreateCommand()
+                $command.CommandText = $dropstring
+                $command.ExecuteNonQuery() | Out-Null
+                Write-Warning "Table dropped."
+            } catch {
+                Write-Error $_.Exception.Message
+                Write-Warning "Could not drop Table in database. See SQL query error message above."
+            }
+            
         }
 
         # are we using SQL Server (empty connection string)?
