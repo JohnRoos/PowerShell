@@ -862,10 +862,10 @@ function Write-ObjectToSQL
         # did the input object contain any supported properties? If not, break the script
         # if no supported properties were found then either $strBuilderColumns or $strBuilderValues (or probably both) will be empty
         if ( !$strBuilderColumns.ToString() ){
-            Throw 'The input object did not contain any supported properties. Unable to generate columns for insert.'
+            Throw "The input object did not contain any supported properties. Unable to generate columns for insert.`nKEY: ""$key"" DATATYPE: ""$datatype"""
         }
         if ( !$strBuilderValues.ToString() ){
-            Throw 'The input object did not contain any supported properties. Unable to generate values for insert.'
+            Throw "The input object did not contain any supported properties. Unable to generate values for insert.`nKEY: ""$key"" DATATYPE: ""$datatype"""
         }
             
         # remove the first two characters which should be a space and a comma in both strings
