@@ -15,7 +15,7 @@ function Get-ParamHelp {
         [switch]$Online
     )
     <#
-    DynamicParam {
+      DynamicParam {
         $attributes1 = New-Object System.Management.Automation.ParameterAttribute
         $attributes1.ValueFromPipelineByPropertyName = $true
         $attributes1.Position = 0
@@ -43,7 +43,7 @@ function Get-ParamHelp {
         $paramDictionary.Add("Raw", $dynParam2)
         
         return $paramDictionary
-    }
+      }
     #>
 
 
@@ -53,7 +53,7 @@ function Get-ParamHelp {
     }
 
     Process {
-#        $Name = $PSBoundParameters['Name']
+    #        $Name = $PSBoundParameters['Name']
         $jsonobjects = @()
         foreach ($object in $allobjects) {
             if ( $object.Name -like $Name -or !$Name) {
@@ -359,33 +359,55 @@ function Remove-Link {}
 function Remove-Example {}
   #add ShouldProcess
 Function Update-ParamHelp {
-
+  [cmdletbinding()]
+  param ()
     
-    # check local meta by calling GetJsonData -meta
+    # Get local meta data
     $LocalMeta = GetJsonData -Meta
+    $modulepath = Split-Path -Path $MyInvocation.MyCommand.Module.Path -Parent
+    $localRevision = $LocalMeta.Revision - $LocalMeta.Local.Revision
 
-    # warn user if local changes has  been done
+
+    # Checking for local changes
     if ($LocalMeta.Local.Modified) {
         Write-Warning "ParamHelp data has been locally modified. Use the Force parameter to overwrite all locally saved ParamHelp data."
         return
     }
 
-    # call DownloadUpdate with Url from Source in Data.json
+    # Download update
+    Write-Verbose 'Checking for update'
     $DownloadedUpdate = DownloadUpdate -Uri $LocalMeta.Source -ErrorAction Stop
 
     # compare revision with current, if online version is newer: continue
-    if ($LocalMeta.Revision -lt $DownloadedUpdate.Meta.Revision) {
-        Write-Error "Local revision is newer than the downloaded version. Aborting update."
+    if ($localRevision -gt $DownloadedUpdate.Meta.Revision) {
+        Write-Error "Local revision is newer than the online version. Aborting update."
+        return
+    } elseif ($localRevision -eq $DownloadedUpdate.Meta.Revision) {
+        Write-Verbose "Local data is up to date. Aborting update."
         return
     }
     
-    # verify required module version, if version required is higher, prompt the user to update the module first
-        # whats the easiest way to check the local module version from within the module?
-
-    # backup existing data.json using SaveJsonData with custom name
-    # update object meta with download date and modified = false
-    # call SaveJsonData to save the file
-    # inform the user that the revision history is available at GitHub (using FileHistory from data.json)
+    # compare module version requirement
+    if ($DownloadedUpdate.Meta.RequiresModuleVersion -gt $MyInvocation.MyCommand.Module.Version) {
+      Write-Error -Message "This update requires module version $($DownloadedUpdate.Meta.RequiresModuleVersion). Please update ParamHelp module before updating help data. To update use the following command: Update-Module Get-ParamHelp"
+    }
+    
+    # backup local data
+    
+    Write-Verbose 'Backing up local data'
+    $timestamp = Get-Date -Format o | foreach {$_ -replace ":", "."}
+    Copy-Item -Path "$modulepath\data.json" -Destination "$modulepath\data_$timestamp.json"
+    
+    # set local meta
+    $DownloadedUpdate.Meta.Local.DownloadDate = Get-Date -Format o
+    $DownloadedUpdate.Meta.Local.Modified = $false
+    $DownloadedUpdate.Meta.Local.Revision = 0
+    
+    # save file
+    $DownloadedUpdate.PSObject.TypeNames.Insert(0,'ParameterHelp')
+    SaveJsonData -data $DownloadedUpdate -KeepRevision
+    Write-Output "ParamHelp data updated. Whats new: $($DownloadedUpdate.Meta.FileHistory)"
+  
 }
     
 
@@ -403,8 +425,8 @@ function DownloadUpdate {
 
     Process 
     { 
-        $webrequest = Invoke-WebRequest -Uri $Uri -UseBasicParsing -ErrorAction Stop
-        $converted = ConvertFrom-Json -InputObject $webrequest -ErrorAction Stop
+        $webrequest = Invoke-WebRequest -Uri $Uri -UseBasicParsing -ErrorAction Stop -Verbose:$false
+        $converted = ConvertFrom-Json -InputObject $webrequest -ErrorAction Stop -Verbose:$false
     
         # basic verification
         if ([string]::IsNullOrEmpty($converted.Meta.RequiresModuleVersion))
@@ -483,19 +505,23 @@ function ValidateOneMatch {
 function GetJsonData {
     param (
         [string]$Path,
-        [switch]$Meta
+        [switch]$Meta,
+        [psobject]$Data
     )
 
     if ([string]::IsNullOrEmpty($Path)) {
-        $Path = Split-Path -Path $PSCommandPath -Parent
-        $Path += '\data.json'
+        $modulepath = Split-Path -Path $MyInvocation.MyCommand.Module.Path -Parent
+        $Path += "$modulepath\data.json"
     }
     
     if (-not (Test-Path -Path $Path)) {
         Throw "Path not found: $Path"
     }
-
-    $allobjects = Get-Content -Path $Path -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+    if ($Data) {
+        $allobjects = $Data
+    } else {
+        $allobjects = Get-Content -Path $Path -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+    }
     if ($Meta) {
         if (($allobjects | Get-Member -MemberType NoteProperty).Name -notcontains 'Meta') {
             Write-Error "Json file is not valid. Metadata is missing."
@@ -522,20 +548,21 @@ function GetJsonData {
 # add default path, same as GetJsonData
 function SaveJsonData {
     param (
-        [pscustomobject[]]$data,
-        [string]$Path
+        [pscustomobject]$data,
+        [string]$Path,
+        [switch]$KeepRevision
     )
     
     # move to parameter script validation?
-    foreach ($object in $data) {
-        if ($object.psobject.TypeNames -notcontains 'ParameterHelp'){
+    #foreach ($object in $data) {
+        if ($data.psobject.TypeNames -notcontains 'ParameterHelp'){
             Throw "Data parameter only accepts one or more ParameterHelp objects"
         }
-    }
+    #}
 
     if ([string]::IsNullOrEmpty($Path)) {
-        $Path = Split-Path -Path $PSCommandPath -Parent
-        $Path += '\data.json'
+        $modulepath = Split-Path -Path $MyInvocation.MyCommand.Module.Path -Parent
+        $Path += "$modulepath\data.json"
     }
 
     # move to parameter script validation?
@@ -543,10 +570,18 @@ function SaveJsonData {
         Throw "Directory not found"
     }
 
+    # update local meta
+    if (!$KeepRevision) {
+      $data.Meta.Revision += 1
+      $data.Meta.Local.Revision += 1
+      $data.Meta.Local.Modified = $true
+    }
+    
     try {
-        $data | Sort-Object -Property Name | Select-Object -Property * -ExcludeProperty ExamplesCount | ConvertTo-Json -Depth 3 -ErrorAction Stop | Out-File -FilePath $Path -ErrorAction Stop
+        $data.ParamHelp = $data.ParamHelp | Sort-Object -Property Name | Select-Object -Property * -ExcludeProperty ExamplesCount
+        ConvertTo-Json -InputObject $data -Depth 4 -ErrorAction Stop | Out-File -FilePath $Path -ErrorAction Stop
     } catch {
-        Throw "Unable to save json file"
+        Write-Error "Unable to save json file. Exception: $_"
     }
 }
 #endregion
