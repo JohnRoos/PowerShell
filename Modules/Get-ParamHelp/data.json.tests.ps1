@@ -40,7 +40,7 @@ Describe "JSON data" {
         Uri = [string]
         Description = [string]
     }
-    foreach ($obj in $data) {
+    foreach ($obj in $data.ParamHelp) {
         Context "$($obj.Name)" {
             
             # validate base properties

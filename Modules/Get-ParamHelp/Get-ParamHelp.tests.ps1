@@ -1,18 +1,26 @@
 ﻿<#
-Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'GetJsonData' }
-Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'SaveJsonData' }
-Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = '*JsonData' }
-Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Get-ParamHelp' }
-Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Set-ParamHelp' }
-Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1' }
+    Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'GetJsonData' }
+    Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'SaveJsonData' }
+    Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = '*JsonData' }
+    Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Get-ParamHelp' }
+    Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Set-ParamHelp' }
+    Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1' }
+
+    Invoke-Pester .\Get-ParamHelp.tests.ps1 -Tag New
 #>
+
+
 
 # data.json path
 $basepath = Split-Path $MyInvocation.MyCommand.Path -Parent
 $jsonfilepath = "$basepath\data.json"
+Set-Location $basepath
 
-Import-Module $basepath\Get-ParamHelp.ps1 -Force -ErrorAction Stop
+#Import-Module $basepath -Force -ErrorAction Stop
 
+#$ExecutionContext.InvokeCommand.InvokeScript($false, ([scriptblock]::Create([io.file]::ReadAllText("$basepath\Get-ParamHelp.ps1"))), $null, $null)
+#. $basepath\Get-ParamHelp.ps1
+Import-Module $basepath -Force
 #region Sample Data
 
 $SampleParamJson = @"
@@ -38,54 +46,122 @@ $SampleParamJson = @"
 "@
 $SampleParamJsonWithoutExamples = @"
 {
-    "Name":"ParameterSetName",
-    "Type":"Argument",
-    "Parent":"Parameter",
-    "Description":"Defines which parameter set a parameter belongs to. Multiple sets can be used. Parameters belonging to other sets will be filtered out if a set parameter is selected.",
-    "Links":[
-        {
-            "Uri":"https://msdn.microsoft.com/en-us/library/ms714348(v=vs.85).aspx",
-            "Description":"Parameter Attribute Declaration (MSDN)"
-        }
-    ]
+  "Meta":  {
+                 "SchemaVersion":  "2.0",
+                 "RequiresModuleVersion":  "1.1.0",
+                 "Revision":  42,
+                 "Source":  "https://raw.githubusercontent.com/JohnRoos/PowerShell/master/Modules/Get-ParamHelp/data.json",
+                 "FileHistory":  "https://github.com/JohnRoos/PowerShell/commits/master/Modules/Get-ParamHelp/data.json",
+                 "OnlineVersion":  "http://blog.roostech.se/p/advancedfunctions.html",
+                 "Local":  {
+                               "DownloadDate":  "2018-10-18T19:57:56.6903477+02:00",
+                               "Revision":  0,
+                               "Modified":  false
+                           }
+             },
+    "ParamHelp":  [
+          {
+              "Name":"ParameterSetName",
+              "Type":"Argument",
+              "Parent":"Parameter",
+              "Description":"Defines which parameter set a parameter belongs to. Multiple sets can be used. Parameters belonging to other sets will be filtered out if a set parameter is selected.",
+              "Links":[
+                  {
+                      "Uri":"https://msdn.microsoft.com/en-us/library/ms714348(v=vs.85).aspx",
+                      "Description":"Parameter Attribute Declaration (MSDN)"
+                  }
+              ]
+          }
+      ]
 }
 "@
 $SampleParamJsonWithoutName = @"
 {
-    "Type":"Argument",
-    "Parent":"Parameter",
-    "Description":"Defines which parameter set a parameter belongs to. Multiple sets can be used. Parameters belonging to other sets will be filtered out if a set parameter is selected.",
-    "Links":[
-        {
-            "Uri":"https://msdn.microsoft.com/en-us/library/ms714348(v=vs.85).aspx",
-            "Description":"Parameter Attribute Declaration (MSDN)"
-        }
-    ]
+  "Meta":  {
+                 "SchemaVersion":  "2.0",
+                 "RequiresModuleVersion":  "1.1.0",
+                 "Revision":  42,
+                 "Source":  "https://raw.githubusercontent.com/JohnRoos/PowerShell/master/Modules/Get-ParamHelp/data.json",
+                 "FileHistory":  "https://github.com/JohnRoos/PowerShell/commits/master/Modules/Get-ParamHelp/data.json",
+                 "OnlineVersion":  "http://blog.roostech.se/p/advancedfunctions.html",
+                 "Local":  {
+                               "DownloadDate":  "2018-10-18T19:57:56.6903477+02:00",
+                               "Revision":  0,
+                               "Modified":  false
+                           }
+             },
+    "ParamHelp":  [
+          {
+              "Type":"Argument",
+              "Parent":"Parameter",
+              "Description":"Defines which parameter set a parameter belongs to. Multiple sets can be used. Parameters belonging to other sets will be filtered out if a set parameter is selected.",
+              "Links":[
+                  {
+                      "Uri":"https://msdn.microsoft.com/en-us/library/ms714348(v=vs.85).aspx",
+                      "Description":"Parameter Attribute Declaration (MSDN)"
+                  }
+              ]
+          }
+      ]
 }
 "@
 $SampleParamJsonWithoutDescription = @"
 {
-    "Name":"ParameterSetName",
-    "Type":"Argument",
-    "Parent":"Parameter",
-    "Links":[
-        {
-            "Uri":"https://msdn.microsoft.com/en-us/library/ms714348(v=vs.85).aspx",
-            "Description":"Parameter Attribute Declaration (MSDN)"
-        }
-    ]
+  "Meta":  {
+                 "SchemaVersion":  "2.0",
+                 "RequiresModuleVersion":  "1.1.0",
+                 "Revision":  42,
+                 "Source":  "https://raw.githubusercontent.com/JohnRoos/PowerShell/master/Modules/Get-ParamHelp/data.json",
+                 "FileHistory":  "https://github.com/JohnRoos/PowerShell/commits/master/Modules/Get-ParamHelp/data.json",
+                 "OnlineVersion":  "http://blog.roostech.se/p/advancedfunctions.html",
+                 "Local":  {
+                               "DownloadDate":  "2018-10-18T19:57:56.6903477+02:00",
+                               "Revision":  0,
+                               "Modified":  false
+                           }
+             },
+    "ParamHelp":  [
+          {
+              "Name":"ParameterSetName",
+              "Type":"Argument",
+              "Parent":"Parameter",
+              "Links":[
+                  {
+                      "Uri":"https://msdn.microsoft.com/en-us/library/ms714348(v=vs.85).aspx",
+                      "Description":"Parameter Attribute Declaration (MSDN)"
+                  }
+              ]
+          }
+      ]
 }
 "@
 $SampleParamJsonWithoutNameAndDescription = @"
 {
-    "Type":"Argument",
-    "Parent":"Parameter",
-    "Links":[
-        {
-            "Uri":"https://msdn.microsoft.com/en-us/library/ms714348(v=vs.85).aspx",
-            "Description":"Parameter Attribute Declaration (MSDN)"
-        }
-    ]
+  "Meta":  {
+                 "SchemaVersion":  "2.0",
+                 "RequiresModuleVersion":  "1.1.0",
+                 "Revision":  42,
+                 "Source":  "https://raw.githubusercontent.com/JohnRoos/PowerShell/master/Modules/Get-ParamHelp/data.json",
+                 "FileHistory":  "https://github.com/JohnRoos/PowerShell/commits/master/Modules/Get-ParamHelp/data.json",
+                 "OnlineVersion":  "http://blog.roostech.se/p/advancedfunctions.html",
+                 "Local":  {
+                               "DownloadDate":  "2018-10-18T19:57:56.6903477+02:00",
+                               "Revision":  0,
+                               "Modified":  false
+                           }
+             },
+    "ParamHelp":  [
+          {
+              "Type":"Argument",
+              "Parent":"Parameter",
+              "Links":[
+                  {
+                      "Uri":"https://msdn.microsoft.com/en-us/library/ms714348(v=vs.85).aspx",
+                      "Description":"Parameter Attribute Declaration (MSDN)"
+                  }
+              ]
+          }
+      ]
 }
 "@
 
@@ -144,16 +220,26 @@ Describe "GetJsonData" {
         }
     }
 
-    Context "Abnormal json file" {
+    Context "Abnormal json file"  {
+        
+        function Get-Content { 'should_not_be_used' }
+            
+        
         
         It "Runs normally when examples are missing in json" {
             Mock Get-Content {$SampleParamJsonWithoutExamples}
             GetJsonData | Should Not BeNullOrEmpty
         }
-
+        
         It "When examples are missing, ExamplesCount is zero" {
+            Mock Get-Content { $SampleParamJsonWithoutExamples }
+            (GetJsonData).ExamplesCount | Should -Be 0
+            
+        }
+        
+        It "When examples are missing, Name should still be there" {
             Mock Get-Content {$SampleParamJsonWithoutExamples}
-            GetJsonData | Select-Object -ExpandProperty ExamplesCount | Should Be 0
+            (GetJsonData).Name | Should Be 'ParameterSetName'
         }
 
         It "Throws expected error if Name is missing" {
@@ -185,10 +271,13 @@ Describe "GetJsonData" {
                 $_.FullyQualifiedErrorId | Should Be "Json file is not valid"
             }
         }
+        
     }
 }
 
-Describe "SaveJsonData" {
+Describe "SaveJsonData"  {
+    
+    Copy-Item -Path $jsonfilepath -Destination 'TestDrive:\data.json'
 
     It "Runs normally when saving a ParameterHelp object to json" {
         SaveJsonData -data $SampleParamObject -Path 'TestDrive:\data.json' | Should BeNullOrEmpty
@@ -212,15 +301,6 @@ Describe "SaveJsonData" {
         }
     }
 
-    it "Throws if file cannot be saved in directory" {
-        Mock Test-Path {$true}
-        try {
-            SaveJsonData -data $SampleParamObject -Path 'TestDrive:\non-existing-folder\data.json'
-            Throw "No exception thrown"
-        } catch {
-            $_.FullyQualifiedErrorId | Should Be 'Unable to save json file'           
-        }
-    }
 
 }
 
@@ -251,7 +331,7 @@ Describe "GetPaddedString" {
         
 }
 
-Describe "ValidateOneMatch" {
+Describe "ValidateOneMatch"  {
     
     BeforeAll {
         $allobjects = GetJsonData
@@ -266,7 +346,7 @@ Describe "ValidateOneMatch" {
             ValidateOneMatch -Name "qwerty" -allobjects $allobjects
             Throw "No exception thrown"
         } catch {
-            $_.FullyQualifiedErrorId | Should Be "Could not find help content with that name."
+            $_.FullyQualifiedErrorId | Should Be "Could not find parameter help content with that name."
         }
     }
 
@@ -287,7 +367,7 @@ Describe "ValidateOneMatch" {
             ValidateOneMatch -allobjects $allobjects
             Throw "No exception thrown"
         } catch {
-            $_.FullyQualifiedErrorId | Should Be "Could not find help content with that name."
+            $_.FullyQualifiedErrorId | Should Be "Could not find parameter help content with that name."
         }
     }
 
@@ -296,7 +376,7 @@ Describe "ValidateOneMatch" {
             ValidateOneMatch -Name "Parameter"
             Throw "No exception thrown"
         } catch {
-            $_.FullyQualifiedErrorId | Should Be "Could not find help content with that name."
+            $_.FullyQualifiedErrorId | Should Be "Could not find parameter help content with that name."
         }
     }
 
@@ -328,7 +408,7 @@ $linkprops = @{
     Description = [string]
 }
 
-Describe "Get-ParamHelp" {
+Describe "Get-ParamHelp" -tag 'new' {
     
     Context "Input" {
 
@@ -361,7 +441,7 @@ Describe "Get-ParamHelp" {
         }
 
         It "Returns the correct amount of objects when no parameters are used" {
-            $count = (Get-Content -Path data.json | ConvertFrom-Json).Count
+            $count = (Get-Content -Path data.json | ConvertFrom-Json).ParamHelp.Count
             (Get-ParamHelp).count | Should Be $count
         }
 
@@ -380,8 +460,10 @@ Describe "Get-ParamHelp" {
                 $object.psobject.Properties.Name -contains $key | Should Be $true 
             }
 
-            It "Property $key is of type $($baseprops.$key)" {
-                $object.$key | Should BeOfType $baseprops.$key
+            if (![string]::IsNullOrEmpty($object.$key)) {
+                It "Property $key is of type $($baseprops.$key)" {
+                  $object.$key | Should BeOfType $baseprops.$key
+                }
             }
         }
 
@@ -406,7 +488,7 @@ Describe "Get-ParamHelp" {
 }
 
 <#
-  Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Set-ParamHelp' }
+    Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Set-ParamHelp' }
 #>
 
 Describe "Set-ParamHelp" {
@@ -448,7 +530,7 @@ Describe "Set-ParamHelp" {
 }
 
 <#
-  Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Add-ParamHelp' }
+    Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Add-ParamHelp' }
 #>
 
 Describe "Add-ParamHelp" {
@@ -500,7 +582,7 @@ Describe "Add-ParamHelp" {
 
 
 <#
-  Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Add-ParamHelpExample' }
+    Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Add-ParamHelpExample' }
 #>
 
 Describe "Add-ParamHelpExample" {
@@ -531,19 +613,19 @@ Describe "Add-ParamHelpExample" {
             $test.Description | Should Be '_TestExampleDescription_'
         }
 
-        It 'Throws expected error if wrong unknown name is used' {
+        It 'Throws expected error if wrong name is used' {
             Try {
                 Add-ParamHelpExample -Name 'some wrong name' -Example 'x' -ExampleDescription 'x'
                 Throw "No error thrown"
             } catch {
-                $_.FullyQualifiedErrorId | Should Be "Could not find help content with that name."
+                $_.FullyQualifiedErrorId | Should Be 'Could not find parameter help content with that name.'
             }
         }
     }
 }
 
 <#
-  Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Set-ParamHelpExample' }
+    Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Set-ParamHelpExample' }
 #>
 
 Describe "Set-ParamHelpExample" {
@@ -578,14 +660,16 @@ Describe "Set-ParamHelpExample" {
 }
 
 <#
-  Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Remove-ParamHelpExample' }
+    Invoke-Pester .\Get-ParamHelp.tests.ps1 -CodeCoverage @{Path = '.\Get-ParamHelp.ps1'; Function = 'Remove-ParamHelpExample' }
 #>
 
 Describe "Remove-ParamHelpExample" {
     
     # verify that mocking works 
     # (might not work under certain conditions, like duplicate functions loaded etc.)
-    Mock SaveJsonData { return 'SaveJsonData is mocked' }
+    function SaveJsonData {}
+    
+    Mock SaveJsonData { 'SaveJsonData is mocked' }
     
     It 'Function SaveJsonData is mocked' {
         SaveJsonData | Should Be 'SaveJsonData is mocked' 
@@ -593,12 +677,12 @@ Describe "Remove-ParamHelpExample" {
 
     if ((SaveJsonData -Path 'TESTDRIVE:\data.json') -eq 'SaveJsonData is mocked') {
         
-        # Mock SaveJsonData properly before doing proper tests
-        Mock SaveJsonData { return ([PSCustomObject]@{ obj=$data}) }
+        # Mock SaveJsonData before doing tests
+        Mock SaveJsonData {param($data) $data }
 
         $sample = Get-ParamHelp | Where-Object -Property ExamplesCount -gt 0 | Select-Object -First 1
         $result = Remove-ParamHelpExample -Name $sample.Name -ExampleId 1 -Confirm:$false
-        $test = $result.obj | Where-Object -Property Name -eq $sample.Name
+        $test = $result | Where-Object -Property Name -eq $sample.Name
 
 
         <#
