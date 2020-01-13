@@ -1,4 +1,6 @@
 # IniManager
+[![IniManager](https://img.shields.io/powershellgallery/v/IniManager.svg?style=flat&label=IniManager)](https://www.powershellgallery.com/packages/IniManager/) [![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/IniManager?style=flat)](https://www.powershellgallery.com/packages/IniManager/)
+
 This module contains 7 cmdlets for managing ini files.
 * Get-Ini
 * New-Ini
