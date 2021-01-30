@@ -64,7 +64,7 @@
        Guid
 
 
-   Version 1.14
+   Version 1.15
    Created by John Roos 
    Email: john@roostech.se
    Web: http://blog.roostech.se
@@ -188,6 +188,7 @@
                     Added conversion of linebreaks from PS to SQL
                     Changed nvarchar(1000) to nvarchar(MAX) as default
                     Changed varchar(1000) to varchar(MAX) as default
+		    Skipping Null or Empty entries in order to avoid Ignored Properties (specially to avoid issues with DBNull)
 
 
 .LINK
@@ -618,7 +619,7 @@ function Write-ObjectToSQL
             Write-Verbose 'Starting to process properties.'
             $names | ForEach-Object {
                 Write-Verbose "Adding property $_"
-                $datasample.Add($_,$inputobject.$_)
+                $datasample.Add($_,($inputobject.$_ | Where-Object {![string]::IsNullOrEmpty($_)}))
             } # foreach
               
             # get all property types by parsing the output from Get-Member
